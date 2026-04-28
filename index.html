@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<link rel="icon" type="image/png" href="logo.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LYHA Archive System</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-alt: #f8fafc;
+    --surface: #ffffff;
+    --text: #0f172a;
+    --text-sec: #64748b;
+    --blue: #3b82f6;
+    --blue-light: #dbeafe;
+    --orange: #f97316;
+    --orange-light: #ffedd5;
+    --green: #10b981;
+    --green-light: #d1fae5;
+    --border: #e2e8f0;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --radius: 12px;
+    --trans: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Arabic", "Droid Arabic Naskh", sans-serif; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg-alt); color: var(--text); line-height: 1.5; min-height: 100vh; overflow-x: hidden; }
+
+  /* Scroll lock when overlay is open */
+  body.scroll-locked {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  
+  header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; padding-bottom: 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; color: var(--text); }
+  .logo img { width: 40px; height: 40px; object-fit: contain; }
+  
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .lang-btn { padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-size: 13px; font-weight: 600; transition: var(--trans); display: flex; align-items: center; gap: 6px; }
+  .lang-btn:hover { background: var(--bg-alt); border-color: var(--blue); }
+
+  .user-info { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-sec); }
+  .user-info svg { width: 28px; height: 28px; color: var(--blue); }
+  .logout-link { color: var(--blue); cursor: pointer; font-weight: 600; text-decoration: none; font-size: 13px; }
+  .logout-link:hover { text-decoration: underline; }
+  
+  .controls { display: flex; gap: 12px; flex: 1; justify-content: flex-end; align-items: center; min-width: 280px; }
+  .search-wrap { position: relative; flex: 1; max-width: 400px; }
+  .search-wrap input { width: 100%; padding: 10px 38px 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font-size: 14px; transition: var(--trans); outline: none; }
+  [dir="rtl"] .search-wrap input { padding: 10px 14px 10px 38px; }
+  .search-wrap input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light); }
+  .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sec); pointer-events: none; }
+  [dir="rtl"] .search-icon { right: auto; left: 12px; }
+  select { padding: 10px 32px 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text-sec); cursor: pointer; outline: none; transition: var(--trans); appearance: none; background-image: url("image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; }
+  [dir="rtl"] select { padding: 10px 14px 10px 32px; background-position: left 10px center; }
+  select:hover { border-color: var(--text-sec); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); transition: var(--trans); text-align: center; }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .stat-title { font-size: 13px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .stat-val { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .stat-icon { display: inline-flex; padding: 8px; border-radius: 8px; margin-bottom: 12px; }
+  .icon-blue { background: var(--blue-light); color: var(--blue); }
+  .icon-orange { background: var(--orange-light); color: var(--orange); }
+  .icon-green { background: var(--green-light); color: var(--green); }
+
+  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .chart-box { background: var(--surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+  .chart-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .chart-svg { width: 100%; height: 220px; display: block; }
+
+  .categories { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .cat-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 24px; cursor: pointer; transition: var(--trans); display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden; }
+  .cat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--blue), var(--orange), var(--green)); opacity: 0; transition: opacity var(--trans); }
+  .cat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--blue); }
+  .cat-card:hover::before { opacity: 1; }
+  .cat-card-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .cat-card-icon svg { width: 24px; height: 24px; }
+  .cat-card-name { font-size: 18px; font-weight: 700; color: var(--text); }
+  .cat-card-stats { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-sec); }
+  .cat-card-count { background: var(--bg-alt); padding: 4px 10px; border-radius: 99px; font-weight: 600; font-size: 12px; }
+  .cat-card-arrow { position: absolute; bottom: 16px; left: 16px; color: var(--text-sec); transition: var(--trans); }
+  [dir="rtl"] .cat-card-arrow { left: auto; right: 16px; }
+  .cat-card:hover .cat-card-arrow { color: var(--blue); transform: translateX(-3px); }
+
+  /* ===== FULL PAGE OVERLAY - SCROLL FIX ===== */
+  .fullpage-overlay { 
+    position: fixed; 
+    inset: 0; 
+    background: var(--bg-alt); 
+    z-index: 2000; 
+    display: flex; 
+    flex-direction: column; 
+    transform: translateX(100%); 
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    opacity: 0; 
+    pointer-events: none; 
+    touch-action: none;
+  }
+  [dir="rtl"] .fullpage-overlay { transform: translateX(-100%); }
+  .fullpage-overlay.active { 
+    transform: translateX(0); 
+    opacity: 1; 
+    pointer-events: auto; 
+  }
+  .fp-header { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    padding: 16px 24px; 
+    background: var(--surface); 
+    border-bottom: 1px solid var(--border); 
+    box-shadow: var(--shadow); 
+    z-index: 10; 
+    gap: 16px; 
+    flex-shrink: 0; 
+  }
+  .fp-title-section { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .fp-title { font-size: 18px; font-weight: 700; }
+  .fp-badge { background: var(--orange-light); color: var(--orange); padding: 4px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; }
+  .fp-search { position: relative; flex: 1; max-width: 400px; }
+  .fp-search input { width: 100%; padding: 10px 38px 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-alt); font-size: 14px; transition: var(--trans); outline: none; }
+  [dir="rtl"] .fp-search input { padding: 10px 14px 10px 38px; }
+  .fp-search input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light); }
+  .fp-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sec); pointer-events: none; }
+  [dir="rtl"] .fp-search-icon { left: auto; right: 12px; }
+  .fp-close { background: var(--bg-alt); border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; transition: 0.15s; flex-shrink: 0; }
+  .fp-close:hover { background: #f1f5f9; }
+  .fp-container { 
+    flex: 1 1 auto;
+    overflow-y: auto; 
+    overflow-x: hidden;
+    padding: 24px; 
+    -webkit-overflow-scrolling: touch; 
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+  
+  .file-list { display: flex; flex-direction: column; gap: 8px; }
+  .list-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); transition: 0.15s; touch-action: pan-y; }
+  .list-row:hover { border-color: var(--blue-light); background: #f8fafc; }
+  .list-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+  .list-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--blue-light); color: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .list-details { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .list-name { font-weight: 600; font-size: 15px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list-meta { font-size: 13px; color: var(--text-sec); flex-shrink: 0; }
+  .list-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn-sm { padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.15s; border: 1px solid var(--border); background: var(--surface); color: var(--text-sec); white-space: nowrap; }
+  .btn-sm:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+  .btn-primary-sm { background: var(--blue); color: white; border: none; }
+  .btn-primary-sm:hover { background: #2563eb; color: white; }
+
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal.active { opacity: 1; pointer-events: auto; }
+  .modal-box { background: var(--surface); width: 90%; max-width: 900px; height: 85vh; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden; transform: scale(0.95); transition: transform 0.2s; }
+  .modal.active .modal-box { transform: scale(1); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-alt); }
+  .modal-title { font-weight: 600; font-size: 15px; }
+  .close-btn { background: none; border: none; cursor: pointer; color: var(--text-sec); padding: 4px; }
+  .modal-iframe { flex: 1; border: none; background: white; }
+
+  /* ===== LOGIN SCREEN ===== */
+  .login-overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  .login-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .login-card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 40px 36px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    max-width: 380px;
+    width: 90%;
+    border: 1px solid var(--border);
+  }
+  .login-card img { width: 80px; height: 80px; margin-bottom: 16px; object-fit: contain; }
+  .login-card h2 { font-size: 20px; margin-bottom: 4px; color: var(--text); }
+  .login-card .subtitle { color: var(--text-sec); font-size: 14px; margin-bottom: 28px; }
+  .login-input-group { text-align: left; margin-bottom: 16px; }
+  [dir="rtl"] .login-input-group { text-align: right; }
+  .login-input-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-sec); margin-bottom: 6px; }
+  .login-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 15px;
+    outline: none;
+    transition: var(--trans);
+    background: var(--bg-alt);
+  }
+  .login-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light); }
+  .login-submit {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--blue);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--trans);
+    margin-top: 8px;
+  }
+  .login-submit:hover { background: #2563eb; }
+  .login-error {
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 14px;
+    display: none;
+    border: 1px solid #fecaca;
+    text-align: center;
+  }
+  .login-error.visible { display: block; }
+  
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-in { animation: fadeUp 0.3s ease forwards; opacity: 0; }
+  .delay-1 { animation-delay: 0.05s; } .delay-2 { animation-delay: 0.1s; } .delay-3 { animation-delay: 0.15s; }
+  .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
+  
+  @media (max-width: 768px) {
+    .controls { justify-content: stretch; }
+    .search-wrap { max-width: 100%; flex: 1; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .fp-search { display: none; }
+    .container { padding: 16px; }
+    .list-row { flex-wrap: wrap; gap: 8px; }
+    .list-actions { width: 100%; justify-content: flex-end; }
+    .charts { grid-template-columns: 1fr; }
+    .fp-header { padding: 12px 16px; }
+    .fp-container { padding: 16px; }
+    .login-card { padding: 30px 24px; }
+  }
+  @media (max-width: 480px) {
+    .stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <img src="logo.png" alt="LYHA Logo" onerror="this.style.display='none'">
+    <h2 data-i18n="loginTitle">LYHA Archive System</h2>
+    <p class="subtitle" data-i18n="loginSubtitle">Please sign in to continue</p>
+    
+    <div class="login-input-group">
+      <label data-i18n="usernameLabel">Username</label>
+      <input type="text" class="login-input" id="loginUsername" autocomplete="username" placeholder="Enter username">
+    </div>
+    <div class="login-input-group">
+      <label data-i18n="passwordLabel">Password</label>
+      <input type="password" class="login-input" id="loginPassword" autocomplete="current-password" placeholder="Enter password">
+    </div>
+    
+    <button class="login-submit" id="loginSubmitBtn" data-i18n="loginBtn">Sign In</button>
+    
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div class="container" id="mainApp" style="display:none;">
+  <header class="animate-in delay-1">
+    <div class="logo">
+      <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
+      <span data-i18n="appName">LYHA Archive System</span>
+    </div>
+    <div class="header-right">
+      <div class="user-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span id="userDisplayName">Admin</span>
+        <span class="logout-link" onclick="handleLogout()" data-i18n="logout">Sign Out</span>
+      </div>
+      <button class="lang-btn" id="langToggle" onclick="toggleLang()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span id="langLabel">العربية</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="controls animate-in delay-1" style="margin-bottom:24px">
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search by name, keyword, category...">
+    </div>
+    <select id="sortSelect">
+      <option value="name-asc" data-i18n-option="sortNameAZ">Name A-Z</option>
+      <option value="name-desc" data-i18n-option="sortNameZA">Name Z-A</option>
+      <option value="pages-desc" data-i18n-option="sortPagesDesc">Pages ↓</option>
+      <option value="pages-asc" data-i18n-option="sortPagesAsc">Pages ↑</option>
+      <option value="year-desc" data-i18n-option="sortYearDesc">Year ↓</option>
+      <option value="year-asc" data-i18n-option="sortYearAsc">Year ↑</option>
+    </select>
+  </div>
+
+  <div class="stats animate-in delay-2">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <div class="stat-title" data-i18n="totalDocs">Total Documents</div>
+      <div class="stat-val" id="totalDocs">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-orange"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg></div>
+      <div class="stat-title" data-i18n="totalPages">Total Pages</div>
+      <div class="stat-val" id="totalPages">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+      <div class="stat-title" data-i18n="avgPages">Avg Pages</div>
+      <div class="stat-val" id="avgPages">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 7v7"/><path d="M12 7v4"/><path d="M16 7v9"/></svg></div>
+      <div class="stat-title" data-i18n="totalCats">Categories</div>
+      <div class="stat-val" id="totalCats">0</div>
+    </div>
+  </div>
+
+  <div class="charts animate-in delay-3">
+    <div class="chart-box">
+      <div class="chart-title" data-i18n="chartByCategory">Documents by Category</div>
+      <svg id="catChart" class="chart-svg"></svg>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title" data-i18n="chartByYear">Documents by Year</div>
+      <svg id="yearChart" class="chart-svg"></svg>
+    </div>
+  </div>
+
+  <div id="categoriesContainer" class="categories animate-in delay-3"></div>
+</div>
+
+<!-- ===== FULL PAGE OVERLAY ===== -->
+<div id="fullpageOverlay" class="fullpage-overlay">
+  <div class="fp-header">
+    <div class="fp-title-section">
+      <span id="fpTitleName" class="fp-title"></span>
+      <span id="fpBadge" class="fp-badge"></span>
+    </div>
+    <div class="fp-search">
+      <svg class="fp-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="fpSearchInput" data-i18n-placeholder="fpSearchPlaceholder" placeholder="Search within this category...">
+    </div>
+    <button class="fp-close" id="closeFullPage">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>
+  <div id="fpListContainer" class="fp-container file-list"></div>
+</div>
+
+<!-- ===== PDF MODAL ===== -->
+<div id="pdfModal" class="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span id="modalTitle" class="modal-title"></span>
+      <button class="close-btn" id="closeModal">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <iframe id="modalFrame" class="modal-iframe" src=""></iframe>
+  </div>
+</div>
+
+<script>
+
+window.onerror = function (msg, url, line, col, error) {
+  console.error("GLOBAL ERROR:", msg, "at", line + ":" + col);
+};
+
+  // ===== SIMPLE AUTH =====
+  const AUTH_CREDENTIALS = { username: 'admin', password: 'admin' };
+  const SESSION_KEY = 'lyha_auth_session';
+
+ function handleLogin() {
+  try {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    const errorEl = document.getElementById('loginError');
+
+    console.log("Login attempt:", username, password);
+
+    if (username === AUTH_CREDENTIALS.username && password === AUTH_CREDENTIALS.password) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
+        username: username,
+        loginTime: Date.now()
+      }));
+
+      console.log("Login success");
+
+      // SAFE LOAD
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.getElementById('mainApp').style.display = 'block';
+
+      // ONLY run app logic AFTER login
+      if (!filteredData.length) {
+        filteredData = Array.isArray(archiveData) ? [...archiveData] : [];
+      }
+
+      try {
+        renderAll();
+        applyTranslations();
+        bindEvents();
+      } catch (err) {
+        console.error("App render error:", err);
+      }
+
+    } else {
+      errorEl.textContent = "Invalid username or password";
+      errorEl.classList.add('visible');
+    }
+
+  } catch (err) {
+    console.error("Login crashed:", err);
+  }
+}
+  function handleLogout() {
+    localStorage.removeItem(SESSION_KEY);
+    showLoginScreen();
+  }
+
+  function showLoginScreen() {
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').classList.remove('visible');
+    document.getElementById('loginUsername').focus();
+  }
+
+  function showApp() {
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('mainApp').style.display = 'block';
+    filteredData = [...archiveData];
+    renderAll();
+    applyTranslations();
+    bindEvents();
+  }
+
+  // Check existing session
+  function checkSession() {
+    const saved = localStorage.getItem(SESSION_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.username === AUTH_CREDENTIALS.username) {
+          showApp();
+          return;
+        }
+      } catch(e) {}
+    }
+    showLoginScreen();
+  }
+
+  // Shake keyframe
+  const shakeStyle = document.createElement('style');
+  shakeStyle.textContent = `@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }`;
+  document.head.appendChild(shakeStyle);
+
+  // ===== i18n Translations =====
+  const translations = {
+    en: {
+      appName: "LYHA Archive System",
+      searchPlaceholder: "Search by name, keyword, category...",
+      sortNameAZ: "Name A-Z",
+      sortNameZA: "Name Z-A",
+      sortPagesDesc: "Pages ↓",
+      sortPagesAsc: "Pages ↑",
+      sortYearDesc: "Year ↓",
+      sortYearAsc: "Year ↑",
+      totalDocs: "Total Documents",
+      totalPages: "Total Pages",
+      avgPages: "Avg Pages",
+      totalCats: "Categories",
+      chartByCategory: "Documents by Category",
+      chartByYear: "Documents by Year",
+      fpSearchPlaceholder: "Search within this category...",
+      documents: "documents",
+      previewBtn: "Preview",
+      openBtn: "Open ↗",
+      noDocs: "No documents found in this category.",
+      noMatch: "No documents match your search.",
+      noYearData: "No year data",
+      pagesTotal: (n) => `${n.toLocaleString()} pages total`,
+      pagesLabel: (n) => `${n} pages`,
+      langLabel: "العربية",
+      loginTitle: "LYHA Archive System",
+      loginSubtitle: "Please sign in to continue",
+      usernameLabel: "Username",
+      passwordLabel: "Password",
+      loginBtn: "Sign In",
+      logout: "Sign Out"
+    },
+    ar: {
+      appName: "نظام الارشيف الالكتروني - جمعية بيوت الشباب الليبية",
+      searchPlaceholder: "بحث بالاسم، السنة، أو الفئة...",
+      sortNameAZ: "الاسم (أ-ي)",
+      sortNameZA: "الاسم (ي-أ)",
+      sortPagesDesc: "الصفحات ↓",
+      sortPagesAsc: "الصفحات ↑",
+      sortYearDesc: "السنة ↓",
+      sortYearAsc: "السنة ↑",
+      totalDocs: "إجمالي المستندات",
+      totalPages: "إجمالي الصفحات",
+      avgPages: "متوسط الصفحات",
+      totalCats: "عدد الفئات",
+      chartByCategory: "المستندات حسب الفئة",
+      chartByYear: "المستندات حسب السنة",
+      fpSearchPlaceholder: "بحث داخل هذه الفئة...",
+      documents: "مستندات",
+      previewBtn: "معاينة",
+      openBtn: "فتح ↗",
+      noDocs: "لا توجد مستندات في هذه الفئة.",
+      noMatch: "لا توجد مستندات مطابقة.",
+      noYearData: "لا توجد بيانات",
+      pagesTotal: (n) => `${n.toLocaleString()} صفحة إجمالاً`,
+      pagesLabel: (n) => `${n} صفحة`,
+      langLabel: "English",
+      loginTitle: "نظام الارشيف الالكتروني",
+      loginSubtitle: "يرجى تسجيل الدخول للمتابعة",
+      usernameLabel: "اسم المستخدم",
+      passwordLabel: "كلمة المرور",
+      loginBtn: "تسجيل الدخول",
+      logout: "تسجيل الخروج"
+    }
+  };
+
+  let currentLang = 'en';
+
+  function toggleLang() {
+    currentLang = currentLang === 'en' ? 'ar' : 'en';
+    const html = document.documentElement;
+    html.setAttribute('lang', currentLang);
+    html.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+    applyTranslations();
+  }
+
+  function applyTranslations() {
+  const t = translations[currentLang];
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.textContent = t[key];
+  });
+
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key]) el.placeholder = t[key];
+  });
+
+  document.querySelectorAll('select option').forEach(opt => {
+    const key = opt.getAttribute('data-i18n-option');
+    if (key && t[key]) opt.textContent = t[key];
+  });
+
+  document.getElementById('langLabel').textContent = t.langLabel;
+
+  // 🔥 ADD THESE
+  renderStats();
+  renderCharts();   // <-- THIS is what you’re missing
+  renderCategories();
+
+  if (fpCategory) renderFullPageList();
+}
+
+  // ===== Fallback Data =====
+  const FALLBACK_DATA = [
+    {
+      name: "الاتحاد الافريقي",
+      name_en: "LYHA-AfricanUnion.pdf",
+      keywords: "1998 1997 1996",
+      years: [2005, 2006, 2007, 2008, 2009, 2010],
+      path: "pdfs/AfricanUnion/LYHA-AfricanUnion.pdf",
+      category: "الاتحاد الافريقي",
+      category_en: "AfricanUnion",
+      pages: 88
+    }
+  ];
+  
+  let archiveData = [];
+  let filteredData = [];
+  let fpCategory = null;
+  const state = { search: '', sortBy: 'name-asc', fpSearch: '' };
+  let scrollPos = 0;
+
+  const catColors = {
+    default: { bg: '#dbeafe', color: '#3b82f6' },
+    colors: [
+      { bg: '#dbeafe', color: '#3b82f6' },
+      { bg: '#ffedd5', color: '#f97316' },
+      { bg: '#d1fae5', color: '#10b981' },
+      { bg: '#ede9fe', color: '#8b5cf6' },
+      { bg: '#fef3c7', color: '#d97706' },
+      { bg: '#fce7f3', color: '#ec4899' },
+      { bg: '#ccfbf1', color: '#14b8a6' },
+      { bg: '#fee2e2', color: '#ef4444' },
+    ]
+  };
+
+  function getCategoryColor(cat) {
+    const idx = Object.keys(getGroupedCategories()).indexOf(cat) % catColors.colors.length;
+    return catColors.colors[idx] || catColors.default;
+  }
+
+  // ===== Init =====
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const res = await fetch('./data.json');
+      if (!res.ok) throw new Error('Fetch failed');
+      const json = await res.json();
+      archiveData = Array.isArray(json) ? json : FALLBACK_DATA;
+    } catch (e) {
+      console.warn('data.json not found, using embedded fallback');
+      archiveData = FALLBACK_DATA;
+    }
+    checkSession();
+  });
+
+  function bindEvents() {
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      state.search = e.target.value.toLowerCase();
+      applyFilters();
+    });
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+      state.sortBy = e.target.value;
+      applyFilters();
+    });
+    document.getElementById('fpSearchInput').addEventListener('input', (e) => {
+      state.fpSearch = e.target.value.toLowerCase();
+      renderFullPageList();
+    });
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('pdfModal').addEventListener('click', (e) => {
+      if (e.target.id === 'pdfModal') closeModal();
+    });
+    document.getElementById('closeFullPage').addEventListener('click', closeFullPage);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        if(document.getElementById('fullpageOverlay').classList.contains('active')) closeFullPage();
+      }
+	  // FORCE LOGIN BUTTON TO WORK ALWAYS
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginSubmitBtn').onclick = handleLogin;
+});
+    });
+
+    // Login form events
+    document.getElementById('loginSubmitBtn').addEventListener('click', handleLogin);
+    document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+    document.getElementById('loginUsername').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+    });
+  }
+
+  function applyFilters() {
+    filteredData = archiveData.filter(item => {
+  const search = state.search;
+
+  return (
+    (item.name || '').toLowerCase().includes(search) ||
+    (item.name_en || '').toLowerCase().includes(search) ||
+    (item.keywords || '').toLowerCase().includes(search) ||
+    (item.category || '').toLowerCase().includes(search) ||
+    (item.category_en || '').toLowerCase().includes(search) ||
+    (Array.isArray(item.years) && item.years.some(y => y.toString().includes(search)))
+  );
+});
+
+    filteredData.sort((a, b) => {
+      const nameA = currentLang === 'ar' ? (a.name || '') : (a.name_en || a.name || '');
+      const nameB = currentLang === 'ar' ? (b.name || '') : (b.name_en || b.name || '');
+      switch(state.sortBy) {
+        case 'name-asc': return nameA.localeCompare(nameB, currentLang);
+        case 'name-desc': return nameB.localeCompare(nameA, currentLang);
+        case 'pages-asc': return (a.pages || 0) - (b.pages || 0);
+        case 'pages-desc': return (b.pages || 0) - (a.pages || 0);
+        case 'year-asc': return getAvgYear(a) - getAvgYear(b);
+        case 'year-desc': return getAvgYear(b) - getAvgYear(a);
+        default: return 0;
+      }
+    });
+
+    renderAll();
+  }
+
+  function getAvgYear(item) {
+    if (!Array.isArray(item.years) || item.years.length === 0) return 0;
+    return item.years.reduce((a, b) => a + b, 0) / item.years.length;
+  }
+
+  function renderAll() {
+    renderStats();
+    renderCharts();
+    renderCategories();
+  }
+
+  function renderStats() {
+    const totalDocs = filteredData.length;
+    const totalPages = filteredData.reduce((sum, i) => sum + (i.pages || 0), 0);
+    const avgPages = totalDocs ? Math.round(totalPages / totalDocs) : 0;
+    const cats = Object.keys(getGroupedCategories()).length;
+
+    document.getElementById('totalDocs').textContent = totalDocs;
+    document.getElementById('totalPages').textContent = totalPages.toLocaleString();
+    document.getElementById('avgPages').textContent = avgPages;
+    document.getElementById('totalCats').textContent = cats;
+  }
+
+  function getGroupedCategories() {
+    const grouped = {};
+    filteredData.forEach(item => {
+      if (!grouped[item.category]) grouped[item.category] = [];
+      grouped[item.category].push(item);
+    });
+    return grouped;
+  }
+
+  function renderCharts() {
+    const t = translations[currentLang];
+    // ===== Category Chart =====
+    const catCounts = {};
+    filteredData.forEach(i => catCounts[i.category] = (catCounts[i.category] || 0) + 1);
+    const catLabels = Object.keys(catCounts).sort((a,b) => catCounts[b] - catCounts[a]);
+    const catMax = Math.max(...catLabels.map(l => catCounts[l]), 1);
+
+    let catSvg = '';
+    const barH = 23, gap = 8, startY = 5;
+    const chartWidth = 400;
+    const labelWidth = 160;
+    const barMaxWidth = chartWidth - labelWidth - 20;
+    const colors = ['#3b82f6', '#f97316', '#10b981', '#8b5cf6', '#0ea5e9', '#ef4444', '#14b8a6', '#ec4899'];
+    catLabels.forEach((cat, idx) => {
+      const y = startY + idx * (barH + gap);
+      const w = (catCounts[cat] / catMax) * barMaxWidth;
+      const isRTL = document.documentElement.dir === 'rtl';
+      const labelX = isRTL ? chartWidth - labelWidth + 120 : labelWidth - 20;
+      const barX = isRTL ? chartWidth - labelWidth - w : labelWidth;
+      const countX = isRTL ? (chartWidth - labelWidth - 16) : (labelWidth + 6);
+      const textAnchor = isRTL ? "start" : "end";
+      catSvg += `<text x="${labelX}" y="${y + 16}" text-anchor="${textAnchor}" font-size="11" fill="#64748b">${cat}</text>`;
+      catSvg += `<rect x="${barX}" y="${y}" width="${Math.max(w, 4)}" height="${barH}" rx="4" fill="${colors[idx % colors.length]}" />`;
+      catSvg += `<text x="${countX}" y="${y + 16}" text-anchor="${isRTL ? 'end' : 'start'}" font-size="11" font-weight="600" fill="#0f172a">${catCounts[cat]}</text>`;
+    });
+    document.getElementById('catChart').innerHTML = catSvg;
+
+    // ===== Year Chart =====
+    const yearCounts = {};
+    filteredData.forEach(item => {
+      if (Array.isArray(item.years)) {
+        item.years.forEach(year => {
+          yearCounts[year] = (yearCounts[year] || 0) + 1;
+        });
+      }
+    });
+    const maxBars = 10;
+    const yearEntries = Object.entries(yearCounts).sort((a, b) => b[1] - a[1]).slice(0, maxBars);
+    
+    if (yearEntries.length === 0) {
+      document.getElementById('yearChart').innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="#64748b" font-size="14">${t.noYearData}</text>`;
+      return;
+    }
+    const yearMax = Math.max(...yearEntries.map(e => e[1]));
+    const chartHeight = 220;
+    const barWidth = 32;
+    const barGap = 16;
+    const startX = 20;
+    const baselineY = chartHeight - 28;
+    let yearSvg = '';
+    
+    yearEntries.forEach(([yr, count], idx) => {
+      const barHeight = Math.max((count / yearMax) * (chartHeight - 60), 4);
+      const x = startX + idx * (barWidth + barGap);
+      const y = baselineY - barHeight;
+      yearSvg += `<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" fill="#3b82f6" />`;
+      if (barHeight > 22) {
+        yearSvg += `<text x="${x + barWidth/2}" y="${y + barHeight/2 + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="white">${count}</text>`;
+      } else {
+        yearSvg += `<text x="${x + barWidth/2}" y="${y - 6}" text-anchor="middle" font-size="10" font-weight="700" fill="#0f172a">${count}</text>`;
+      }
+      yearSvg += `<text x="${x + barWidth/2}" y="${baselineY + 14}" text-anchor="middle" font-size="11" fill="#64748b">${yr}</text>`;
+    });
+    document.getElementById('yearChart').innerHTML = yearSvg;
+  }
+
+  function renderCategories() {
+    const t = translations[currentLang];
+    const container = document.getElementById('categoriesContainer');
+    if (filteredData.length === 0) {
+      container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><p>${t.noMatch}</p></div>`;
+      return;
+    }
+    const grouped = getGroupedCategories();
+    let html = '';
+    Object.keys(grouped).sort().forEach((cat, idx) => {
+      const items = grouped[cat];
+      const totalPages = items.reduce((sum, i) => sum + (i.pages || 0), 0);
+      const clr = getCategoryColor(cat);
+      const displayName = currentLang === 'ar' ? cat : (items[0]?.category_en || cat);
+      html += `
+        <div class="cat-card" onclick="openFullPage('${cat.replace(/'/g, "\\'")}')" style="animation-delay: ${idx * 0.05}s">
+          <div class="cat-card-icon" style="background: ${clr.bg}; color: ${clr.color};">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="cat-card-name">${displayName}</div>
+          <div class="cat-card-stats">
+            <span class="cat-card-count">${items.length} ${t.documents}</span>
+            <span>•</span>
+            <span>${t.pagesTotal(totalPages)}</span>
+          </div>
+          <svg class="cat-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  function renderFullPageList() {
+    if (!fpCategory) return;
+    const t = translations[currentLang];
+    const items = filteredData.filter(i => i.category === fpCategory).filter(item => {
+      if (!state.fpSearch) return true;
+      const searchable = `${item.name} ${item.name_en || ''} ${item.keywords || ''} ${(item.years||[]).join(' ')}`.toLowerCase();
+      return searchable.includes(state.fpSearch);
+    });
+    const container = document.getElementById('fpListContainer');
+    if (items.length === 0) {
+      container.innerHTML = `<div class="empty-state">${t.noDocs}</div>`;
+      return;
+    }
+    container.innerHTML = items.map(file => {
+      const displayName = currentLang === 'ar' ? (file.name || '') : (file.name_en || file.name || '');
+      return `
+        <div class="list-row">
+          <div class="list-info">
+            <div class="list-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="list-details">
+              <div class="list-name" title="${displayName}">${displayName}</div>
+              <div class="list-meta">${t.pagesLabel(file.pages || 0)}${Array.isArray(file.years) ? ' • ' + file.years.join(', ') : ''}</div>
+            </div>
+          </div>
+          <div class="list-actions">
+            <button class="btn-sm" onclick="event.stopPropagation(); openPreview('${(file.path || '').replace(/'/g, "\\'")}', '${displayName.replace(/'/g, "\\'")}')">${t.previewBtn}</button>
+            <button class="btn-sm btn-primary-sm" onclick="event.stopPropagation(); window.open('${(file.path || '').replace(/'/g, "\\'")}', '_blank')">${t.openBtn}</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.openFullPage = (cat) => {
+    const t = translations[currentLang];
+    fpCategory = cat;
+    state.fpSearch = '';
+    document.getElementById('fpSearchInput').value = '';
+    const items = filteredData.filter(i => i.category === cat);
+    const displayName = currentLang === 'ar' ? cat : (items[0]?.category_en || cat);
+    document.getElementById('fpTitleName').textContent = displayName;
+    document.getElementById('fpBadge').textContent = `${items.length} ${t.documents}`;
+
+    // Save scroll position of main page
+    scrollPos = window.pageYOffset || document.documentElement.scrollTop;
+    
+    // Lock body scroll
+    document.body.classList.add('scroll-locked');
+    document.body.style.top = `-${scrollPos}px`;
+    
+    renderFullPageList();
+    
+    // Small delay then show overlay to ensure scroll lock is applied
+    requestAnimationFrame(() => {
+      document.getElementById('fullpageOverlay').classList.add('active');
+    });
+  };
+
+  window.closeFullPage = () => {
+    document.getElementById('fullpageOverlay').classList.remove('active');
+    fpCategory = null;
+    
+    // Unlock body scroll and restore position
+    setTimeout(() => {
+      document.body.classList.remove('scroll-locked');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollPos);
+    }, 300);
+  };
+
+function convertDriveLink(url) {
+  const match = url.match(/\/file\/d\/(.*?)\//);
+  if (match) {
+    return `https://drive.google.com/file/d/${match[1]}/preview`;
+  }
+  return url;
+}
+
+window.openPreview = (path, name) => {
+  if (!path) return;
+  document.getElementById('modalTitle').textContent = name;
+  const previewURL = convertDriveLink(path);
+  document.getElementById('modalFrame').src = previewURL;
+  document.getElementById('pdfModal').classList.add('active');
+};
+
+  window.closeModal = () => {
+    document.getElementById('pdfModal').classList.remove('active');
+    setTimeout(() => document.getElementById('modalFrame').src = '', 200);
+  };
+  document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('loginSubmitBtn');
+
+  if (btn) {
+    btn.addEventListener('click', handleLogin);
+    btn.addEventListener('touchstart', handleLogin); // mobile fix
+  }
+
+  console.log("Login button bound");
+});
+</script>
+</body>
+</html>
+
