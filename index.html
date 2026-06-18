@@ -1,951 +1,2148 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl" data-theme="light">
 <head>
-<link rel="icon" type="image/png" href="logo.png">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>LYHA Archive System</title>
-<style>
-  :root {
-    --bg: #ffffff;
-    --bg-alt: #f8fafc;
-    --surface: #ffffff;
-    --text: #0f172a;
-    --text-sec: #64748b;
-    --blue: #3b82f6;
-    --blue-light: #dbeafe;
-    --orange: #f97316;
-    --orange-light: #ffedd5;
-    --green: #10b981;
-    --green-light: #d1fae5;
-    --border: #e2e8f0;
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --radius: 12px;
-    --trans: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Arabic", "Droid Arabic Naskh", sans-serif; -webkit-tap-highlight-color: transparent; }
-  html { scroll-behavior: smooth; }
-  body { background: var(--bg-alt); color: var(--text); line-height: 1.5; min-height: 100vh; overflow-x: hidden; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>الأرشيف الإلكتروني — جمعية بيوت الشباب الليبية</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="manifest" href="lyha-manifest.json">
+  <meta name="theme-color" content="#0f2d52">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LYHA Archive">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  /* Scroll lock when overlay is open */
-  body.scroll-locked {
-    overflow: hidden !important;
-    position: fixed !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
-  
-  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-  
-  header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; padding-bottom: 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; color: var(--text); }
-  .logo img { width: 40px; height: 40px; object-fit: contain; }
-  
-  .header-right { display: flex; align-items: center; gap: 12px; }
-  .lang-btn { padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-size: 13px; font-weight: 600; transition: var(--trans); display: flex; align-items: center; gap: 6px; }
-  .lang-btn:hover { background: var(--bg-alt); border-color: var(--blue); }
+  <style>
+    /* ══════════════════════════════════════════
+       DESIGN TOKENS
+    ══════════════════════════════════════════ */
+    :root {
+      --navy:        #0f2d52;
+      --navy-mid:    #163d6e;
+      --navy-light:  #1e4f8c;
+      --navy-glow:   rgba(15,45,82,.08);
 
-  .user-info { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-sec); }
-  .user-info svg { width: 28px; height: 28px; color: var(--blue); }
-  .logout-link { color: var(--blue); cursor: pointer; font-weight: 600; text-decoration: none; font-size: 13px; }
-  .logout-link:hover { text-decoration: underline; }
-  
-  .controls { display: flex; gap: 12px; flex: 1; justify-content: flex-end; align-items: center; min-width: 280px; }
-  .search-wrap { position: relative; flex: 1; max-width: 400px; }
-  .search-wrap input { width: 100%; padding: 10px 38px 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font-size: 14px; transition: var(--trans); outline: none; }
-  [dir="rtl"] .search-wrap input { padding: 10px 14px 10px 38px; }
-  .search-wrap input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light); }
-  .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sec); pointer-events: none; }
-  [dir="rtl"] .search-icon { right: auto; left: 12px; }
-  select { padding: 10px 32px 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text-sec); cursor: pointer; outline: none; transition: var(--trans); appearance: none; background-image: url("image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; }
-  [dir="rtl"] select { padding: 10px 14px 10px 32px; background-position: left 10px center; }
-  select:hover { border-color: var(--text-sec); }
+      --orange:      #f97316;
+      --orange-deep: #ea6200;
+      --orange-soft: #fff4ed;
+      --orange-mid:  #fed7aa;
 
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
-  .stat-card { background: var(--surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); transition: var(--trans); text-align: center; }
-  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-  .stat-title { font-size: 13px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-  .stat-val { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
-  .stat-icon { display: inline-flex; padding: 8px; border-radius: 8px; margin-bottom: 12px; }
-  .icon-blue { background: var(--blue-light); color: var(--blue); }
-  .icon-orange { background: var(--orange-light); color: var(--orange); }
-  .icon-green { background: var(--green-light); color: var(--green); }
+      --blue:        #2563eb;
+      --blue-deep:   #1d4ed8;
+      --blue-soft:   #eff6ff;
+      --blue-mid:    #bfdbfe;
 
-  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 32px; }
-  .chart-box { background: var(--surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
-  .chart-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
-  .chart-svg { width: 100%; height: 220px; display: block; }
+      --green:       #059669;
+      --green-deep:  #047857;
+      --green-soft:  #ecfdf5;
+      --green-mid:   #a7f3d0;
 
-  .categories { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-  .cat-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 24px; cursor: pointer; transition: var(--trans); display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden; }
-  .cat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--blue), var(--orange), var(--green)); opacity: 0; transition: opacity var(--trans); }
-  .cat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--blue); }
-  .cat-card:hover::before { opacity: 1; }
-  .cat-card-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-  .cat-card-icon svg { width: 24px; height: 24px; }
-  .cat-card-name { font-size: 18px; font-weight: 700; color: var(--text); }
-  .cat-card-stats { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-sec); }
-  .cat-card-count { background: var(--bg-alt); padding: 4px 10px; border-radius: 99px; font-weight: 600; font-size: 12px; }
-  .cat-card-arrow { position: absolute; bottom: 16px; left: 16px; color: var(--text-sec); transition: var(--trans); }
-  [dir="rtl"] .cat-card-arrow { left: auto; right: 16px; }
-  .cat-card:hover .cat-card-arrow { color: var(--blue); transform: translateX(-3px); }
+      --bg:          #f1f5f9;
+      --surface:     #ffffff;
+      --surface-2:   #f8fafc;
+      --text:        #0f172a;
+      --text-sec:    #475569;
+      --text-muted:  #94a3b8;
+      --border:      #e2e8f0;
+      --border-md:   #cbd5e1;
 
-  /* ===== FULL PAGE OVERLAY - SCROLL FIX ===== */
-  .fullpage-overlay { 
-    position: fixed; 
-    inset: 0; 
-    background: var(--bg-alt); 
-    z-index: 2000; 
-    display: flex; 
-    flex-direction: column; 
-    transform: translateX(100%); 
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
-    opacity: 0; 
-    pointer-events: none; 
-    touch-action: none;
-  }
-  [dir="rtl"] .fullpage-overlay { transform: translateX(-100%); }
-  .fullpage-overlay.active { 
-    transform: translateX(0); 
-    opacity: 1; 
-    pointer-events: auto; 
-  }
-  .fp-header { 
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between; 
-    padding: 16px 24px; 
-    background: var(--surface); 
-    border-bottom: 1px solid var(--border); 
-    box-shadow: var(--shadow); 
-    z-index: 10; 
-    gap: 16px; 
-    flex-shrink: 0; 
-  }
-  .fp-title-section { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-  .fp-title { font-size: 18px; font-weight: 700; }
-  .fp-badge { background: var(--orange-light); color: var(--orange); padding: 4px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; }
-  .fp-search { position: relative; flex: 1; max-width: 400px; }
-  .fp-search input { width: 100%; padding: 10px 38px 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-alt); font-size: 14px; transition: var(--trans); outline: none; }
-  [dir="rtl"] .fp-search input { padding: 10px 14px 10px 38px; }
-  .fp-search input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light); }
-  .fp-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sec); pointer-events: none; }
-  [dir="rtl"] .fp-search-icon { left: auto; right: 12px; }
-  .fp-close { background: var(--bg-alt); border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; transition: 0.15s; flex-shrink: 0; }
-  .fp-close:hover { background: #f1f5f9; }
-  .fp-container { 
-    flex: 1 1 auto;
-    overflow-y: auto; 
-    overflow-x: hidden;
-    padding: 24px; 
-    -webkit-overflow-scrolling: touch; 
-    overscroll-behavior: contain;
-    touch-action: pan-y;
-  }
-  
-  .file-list { display: flex; flex-direction: column; gap: 8px; }
-  .list-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); transition: 0.15s; touch-action: pan-y; }
-  .list-row:hover { border-color: var(--blue-light); background: #f8fafc; }
-  .list-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
-  .list-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--blue-light); color: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .list-details { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .list-name { font-weight: 600; font-size: 15px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .list-meta { font-size: 13px; color: var(--text-sec); flex-shrink: 0; }
-  .list-actions { display: flex; gap: 8px; flex-shrink: 0; }
-  .btn-sm { padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.15s; border: 1px solid var(--border); background: var(--surface); color: var(--text-sec); white-space: nowrap; }
-  .btn-sm:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
-  .btn-primary-sm { background: var(--blue); color: white; border: none; }
-  .btn-primary-sm:hover { background: #2563eb; color: white; }
+      --shadow-xs:   0 1px 2px rgba(15,45,82,.06);
+      --shadow-sm:   0 2px 8px rgba(15,45,82,.08);
+      --shadow-md:   0 4px 20px rgba(15,45,82,.12);
+      --shadow-lg:   0 12px 40px rgba(15,45,82,.18);
+      --shadow-card: 0 2px 12px rgba(15,45,82,.08), 0 1px 3px rgba(15,45,82,.05);
 
-  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-  .modal.active { opacity: 1; pointer-events: auto; }
-  .modal-box { background: var(--surface); width: 90%; max-width: 900px; height: 85vh; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden; transform: scale(0.95); transition: transform 0.2s; }
-  .modal.active .modal-box { transform: scale(1); }
-  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-alt); }
-  .modal-title { font-weight: 600; font-size: 15px; }
-  .close-btn { background: none; border: none; cursor: pointer; color: var(--text-sec); padding: 4px; }
-  .modal-iframe { flex: 1; border: none; background: white; }
+      --radius:    14px;
+      --radius-sm: 9px;
+      --radius-xs: 6px;
+      --trans:     .2s cubic-bezier(.4,0,.2,1);
+    }
 
-  /* ===== LOGIN SCREEN ===== */
-  .login-overlay {
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-  }
-  .login-overlay.hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-  .login-card {
-    background: var(--surface);
-    border-radius: 20px;
-    padding: 40px 36px;
-    box-shadow: var(--shadow-lg);
-    text-align: center;
-    max-width: 380px;
-    width: 90%;
-    border: 1px solid var(--border);
-  }
-  .login-card img { width: 80px; height: 80px; margin-bottom: 16px; object-fit: contain; }
-  .login-card h2 { font-size: 20px; margin-bottom: 4px; color: var(--text); }
-  .login-card .subtitle { color: var(--text-sec); font-size: 14px; margin-bottom: 28px; }
-  .login-input-group { text-align: left; margin-bottom: 16px; }
-  [dir="rtl"] .login-input-group { text-align: right; }
-  .login-input-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-sec); margin-bottom: 6px; }
-  .login-input {
-    width: 100%;
-    padding: 11px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-size: 15px;
-    outline: none;
-    transition: var(--trans);
-    background: var(--bg-alt);
-  }
-  .login-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light); }
-  .login-submit {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: var(--radius);
-    background: var(--blue);
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--trans);
-    margin-top: 8px;
-  }
-  .login-submit:hover { background: #2563eb; }
-  .login-error {
-    background: #fef2f2;
-    color: #dc2626;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin-top: 14px;
-    display: none;
-    border: 1px solid #fecaca;
-    text-align: center;
-  }
-  .login-error.visible { display: block; }
-  
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  .animate-in { animation: fadeUp 0.3s ease forwards; opacity: 0; }
-  .delay-1 { animation-delay: 0.05s; } .delay-2 { animation-delay: 0.1s; } .delay-3 { animation-delay: 0.15s; }
-  .empty-state { text-align: center; padding: 40px; color: var(--text-sec); }
-  
-  @media (max-width: 768px) {
-    .controls { justify-content: stretch; }
-    .search-wrap { max-width: 100%; flex: 1; }
-    .stats { grid-template-columns: 1fr 1fr; }
-    .fp-search { display: none; }
-    .container { padding: 16px; }
-    .list-row { flex-wrap: wrap; gap: 8px; }
-    .list-actions { width: 100%; justify-content: flex-end; }
-    .charts { grid-template-columns: 1fr; }
-    .fp-header { padding: 12px 16px; }
-    .fp-container { padding: 16px; }
-    .login-card { padding: 30px 24px; }
-  }
-  @media (max-width: 480px) {
-    .stats { grid-template-columns: 1fr; }
-  }
-</style>
+    [data-theme="dark"] {
+      --bg:        #0b1422;
+      --surface:   #111c30;
+      --surface-2: #162035;
+      --text:      #e2e8f0;
+      --text-sec:  #94a3b8;
+      --text-muted:#64748b;
+      --border:    #1e3050;
+      --border-md: #253a60;
+      --navy-glow: rgba(30,79,140,.15);
+      --orange-soft: rgba(249,115,22,.12);
+      --blue-soft:   rgba(37,99,235,.12);
+      --green-soft:  rgba(5,150,105,.12);
+      --orange-mid:  rgba(249,115,22,.25);
+      --blue-mid:    rgba(37,99,235,.25);
+      --green-mid:   rgba(5,150,105,.25);
+      --shadow-sm:   0 2px 8px rgba(0,0,0,.3);
+      --shadow-md:   0 4px 20px rgba(0,0,0,.4);
+      --shadow-lg:   0 12px 40px rgba(0,0,0,.5);
+      --shadow-card: 0 2px 12px rgba(0,0,0,.3);
+    }
+
+    /* ══════════════════════════════════════════
+       RESET & BASE
+    ══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background var(--trans), color var(--trans);
+    }
+
+    /* ══════════════════════════════════════════
+       PAGE SYSTEM — KEY ARCHITECTURE
+       Each "page" is a full-document section.
+       Only one is visible at a time. No fixed
+       overlays fighting the scroll context.
+    ══════════════════════════════════════════ */
+    .page {
+      display: none;
+      min-height: 100vh;
+    }
+    .page.active {
+      display: block;
+    }
+
+    /* ══════════════════════════════════════════
+       LOADING SCREEN
+    ══════════════════════════════════════════ */
+    #page-loading {
+      position: fixed; inset: 0; z-index: 10000;
+      display: flex; align-items: center; justify-content: center;
+      background:
+        radial-gradient(ellipse at 25% 75%, rgba(249,115,22,.18) 0%, transparent 56%),
+        radial-gradient(ellipse at 75% 25%, rgba(37,99,235,.18) 0%, transparent 56%),
+        linear-gradient(145deg, #071929 0%, #0f2d52 54%, #163d6e 100%);
+      transition: opacity .35s ease, visibility .35s ease;
+    }
+    #page-loading.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loading-card {
+      width: min(88vw, 360px);
+      display: grid; justify-items: center; gap: 16px;
+      color: #fff; text-align: center;
+    }
+    .loading-logo {
+      width: 78px; height: 78px; border-radius: 18px;
+      background: #fff; padding: 8px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 16px 40px rgba(0,0,0,.24);
+    }
+    .loading-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .loading-spinner {
+      width: 42px; height: 42px; border-radius: 999px;
+      border: 3px solid rgba(255,255,255,.22);
+      border-top-color: var(--orange);
+      animation: spin .8s linear infinite;
+    }
+    .loading-title { font-size: 17px; font-weight: 900; }
+    .loading-subtitle { font-size: 13px; color: rgba(255,255,255,.72); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ══════════════════════════════════════════
+       LOGIN PAGE
+    ══════════════════════════════════════════ */
+    #page-login {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background:
+        radial-gradient(ellipse at 20% 80%, rgba(249,115,22,.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 20%, rgba(37,99,235,.18) 0%, transparent 55%),
+        linear-gradient(145deg, #071929 0%, #0f2d52 50%, #163d6e 100%);
+      transition: opacity .4s, visibility .4s;
+    }
+    #page-login.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    #page-login::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(circle at 15% 85%, rgba(5,150,105,.15) 0%, transparent 40%),
+        radial-gradient(circle at 85% 15%, rgba(249,115,22,.1) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    .login-card {
+      position: relative;
+      background: rgba(255,255,255,.05);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 24px;
+      padding: 48px 40px;
+      width: 90%; max-width: 420px;
+      text-align: center;
+      box-shadow: 0 32px 80px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.15);
+      animation: slideUp .5s cubic-bezier(.4,0,.2,1) both;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(24px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .login-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(249,115,22,.2);
+      border: 1px solid rgba(249,115,22,.35);
+      padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+    }
+    .login-logo {
+      width: 86px; height: 86px; margin: 0 auto 18px;
+      border-radius: 18px; background: rgba(255,255,255,.95);
+      padding: 8px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 18px 40px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.8);
+    }
+    .login-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .login-badge-dot { width:7px; height:7px; border-radius:50%; background:#f97316; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .login-badge span { font-size:11px; color:#fbbf24; font-weight:700; letter-spacing:.08em; }
+
+    .login-title { font-size:22px; font-weight:900; color:#fff; margin-bottom:6px; line-height:1.3; }
+    .login-subtitle { font-size:13px; color:rgba(255,255,255,.55); margin-bottom:32px; }
+    .login-field-label { display:block; text-align:right; font-size:12px; font-weight:600; color:rgba(255,255,255,.6); margin-bottom:6px; }
+    [dir="ltr"] .login-field-label { text-align:left; }
+    .login-field { margin-bottom:16px; }
+    .login-input {
+      width:100%; padding:13px 16px;
+      border-radius:var(--radius-sm);
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.07); color:#fff;
+      font-family:inherit; font-size:14px; outline:none;
+      transition: border-color .2s, background .2s;
+    }
+    .login-input::placeholder { color:rgba(255,255,255,.35); }
+    .login-input:focus { border-color:var(--orange); background:rgba(255,255,255,.1); }
+    .login-btn {
+      width:100%; padding:14px;
+      border-radius:var(--radius-sm); border:none;
+      background:linear-gradient(135deg, var(--orange) 0%, var(--orange-deep) 100%);
+      color:#fff; font-weight:800; font-size:15px;
+      cursor:pointer; transition:opacity .2s, transform .1s;
+      font-family:inherit;
+      box-shadow:0 4px 16px rgba(249,115,22,.35);
+    }
+    .login-btn:hover  { opacity:.92; }
+    .login-btn:active { transform:scale(.98); }
+    .login-error { color:#fca5a5; font-size:13px; margin-top:12px; display:none; }
+    .login-footer {
+      position: absolute; left: 16px; right: 16px; bottom: 14px;
+      color: rgba(255,255,255,.48); text-align: center;
+      font-size: 11px; font-weight: 600; z-index: 1;
+    }
+
+    /* ══════════════════════════════════════════
+       SHARED HEADER (used on both dashboard & category pages)
+    ══════════════════════════════════════════ */
+    .site-header {
+      background: var(--navy);
+      color: #fff;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,.25);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .header-inner {
+      max-width: 1340px; margin: 0 auto; padding: 0 24px;
+      height: 64px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo-group { display:flex; align-items:center; gap:14px; cursor:pointer; }
+    .logo-emblem {
+      width:42px; height:42px; border-radius:10px;
+      background:#fff; padding:4px; overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 12px rgba(249,115,22,.4); flex-shrink:0;
+    }
+    .logo-emblem img { width:100%; height:100%; object-fit:contain; display:block; }
+    .logo-text h1 {
+      font-size:15px; font-weight:800; line-height:1.2;
+      background:linear-gradient(90deg,#fff 60%,rgba(255,255,255,.7));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .logo-text p { font-size:11px; color:rgba(255,255,255,.5); font-weight:400; }
+    .header-actions { display:flex; gap:8px; align-items:center; }
+    .icon-btn {
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.15);
+      color:rgba(255,255,255,.85);
+      width:36px; height:36px; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; font-family:inherit; transition:var(--trans);
+    }
+    .icon-btn:hover { background:rgba(255,255,255,.18); color:#fff; }
+    .icon-btn svg { width:18px; height:18px; }
+    .lang-btn { font-size:12px; letter-spacing:.05em; width:auto; padding:0 12px; font-weight:700; }
+
+    /* ══════════════════════════════════════════
+       DASHBOARD PAGE — TOOLBAR
+    ══════════════════════════════════════════ */
+    .toolbar {
+      background:var(--surface);
+      border-bottom:1px solid var(--border);
+      position:sticky; top:64px; z-index:90;
+    }
+    .toolbar-inner {
+      max-width:1340px; margin:0 auto; padding:12px 24px;
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .search-box { flex:1; min-width:220px; position:relative; }
+    .search-box input {
+      width:100%; padding:10px 16px 10px 42px;
+      border-radius:var(--radius-sm);
+      border:1.5px solid var(--border);
+      background:var(--bg); color:var(--text);
+      font-family:inherit; font-size:14px; outline:none;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    [dir="rtl"] .search-box input { padding:10px 42px 10px 16px; }
+    .search-box input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+    .search-icon {
+      position:absolute; top:50%; transform:translateY(-50%);
+      color:var(--text-muted); pointer-events:none;
+    }
+    [dir="ltr"] .search-icon { left:13px; }
+    [dir="rtl"] .search-icon { right:13px; }
+    .select-input {
+      padding:10px 14px;
+      border-radius:var(--radius-sm);
+      border:1.5px solid var(--border);
+      background:var(--bg); color:var(--text);
+      font-family:inherit; font-size:13px; outline:none; cursor:pointer;
+      transition:border-color .2s;
+    }
+    .select-input:focus { border-color:var(--blue); }
+
+    /* ══════════════════════════════════════════
+       DASHBOARD — MAIN CONTENT
+    ══════════════════════════════════════════ */
+    .main-container { max-width:1340px; margin:0 auto; padding:28px 24px; }
+
+    /* Stats */
+    .stats-grid {
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px; margin-bottom:28px;
+    }
+    .stat-card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius); padding:20px 22px;
+      display:flex; align-items:center; gap:16px;
+      box-shadow:var(--shadow-card);
+      transition:transform .2s, box-shadow .2s;
+      position:relative; overflow:hidden;
+      animation:fadeUp .4s cubic-bezier(.4,0,.2,1) both;
+    }
+    .stat-card:nth-child(1){animation-delay:.04s}
+    .stat-card:nth-child(2){animation-delay:.08s}
+    .stat-card:nth-child(3){animation-delay:.12s}
+    .stat-card:nth-child(4){animation-delay:.16s}
+    .stat-card::after {
+      content:''; position:absolute; bottom:0; right:0;
+      width:70px; height:70px; border-radius:50%;
+      opacity:.05; transform:translate(20px,20px);
+    }
+    .stat-card:nth-child(1)::after { background:var(--blue); }
+    .stat-card:nth-child(2)::after { background:var(--orange); }
+    .stat-card:nth-child(3)::after { background:var(--green); }
+    .stat-card:nth-child(4)::after { background:var(--navy); }
+    .stat-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+    .stat-icon-wrap {
+      width:50px; height:50px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .stat-icon-wrap svg { width:24px; height:24px; }
+    .stat-info > span  { display:block; font-size:11px; color:var(--text-sec); font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+    .stat-info > strong { font-size:28px; font-weight:900; color:var(--text); line-height:1; }
+
+    /* Charts */
+    .charts-grid {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:14px; margin-bottom:28px;
+    }
+    .chart-card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius); padding:22px 24px;
+      box-shadow:var(--shadow-card);
+    }
+    .chart-header { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+    .chart-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .chart-title { font-size:14px; font-weight:800; color:var(--text); flex:1; }
+    .bar-chart-area { display:flex; flex-direction:column; gap:10px; }
+    .bar-row { display:flex; align-items:center; gap:10px; }
+    .bar-label { font-size:12px; color:var(--text-sec); font-weight:600; min-width:90px; max-width:90px; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    [dir="ltr"] .bar-label { text-align:left; }
+    .bar-track { flex:1; background:var(--bg); border-radius:4px; height:22px; overflow:hidden; }
+    .bar-fill {
+      height:100%; border-radius:4px;
+      display:flex; align-items:center; justify-content:flex-end;
+      padding:0 8px; font-size:11px; font-weight:800; color:#fff;
+      transition:width .6s cubic-bezier(.4,0,.2,1); min-width:28px;
+    }
+    [dir="rtl"] .bar-fill { justify-content:flex-start; }
+    .line-chart-area { position:relative; width:100%; }
+    .line-chart-area svg { width:100%; overflow:visible; }
+
+    /* Chips */
+    .chips-section { margin-bottom:24px; }
+    .chips-label { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; }
+    .chips-row { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip {
+      padding:7px 16px; border-radius:22px;
+      border:1.5px solid var(--border);
+      background:var(--surface); color:var(--text-sec);
+      font-size:13px; font-weight:600; cursor:pointer;
+      transition:var(--trans); font-family:inherit; white-space:nowrap;
+    }
+    .chip:hover { border-color:var(--blue); color:var(--blue); }
+    .chip.active { background:var(--navy); color:#fff; border-color:var(--navy); box-shadow:0 3px 10px rgba(15,45,82,.25); }
+
+    /* Section header */
+    .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    .section-title-text { font-size:19px; font-weight:900; color:var(--text); }
+    .section-count {
+      font-size:12px; font-weight:700; color:var(--text-muted);
+      background:var(--bg); border:1px solid var(--border);
+      padding:4px 12px; border-radius:20px;
+    }
+
+    /* Category cards */
+    .cats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+    .cat-card {
+      background:var(--surface); border:1.5px solid var(--border);
+      border-radius:var(--radius); padding:22px; cursor:pointer;
+      transition:transform .22s, box-shadow .22s, border-color .22s;
+      position:relative; overflow:hidden; box-shadow:var(--shadow-card);
+    }
+    .cat-card::before {
+      content:''; position:absolute; top:0; right:0;
+      width:4px; height:100%;
+      border-radius:0 var(--radius) var(--radius) 0;
+    }
+    [dir="ltr"] .cat-card::before { right:auto; left:0; border-radius:var(--radius) 0 0 var(--radius); }
+    .cat-card:nth-child(3n+1)::before { background:var(--orange); }
+    .cat-card:nth-child(3n+2)::before { background:var(--blue); }
+    .cat-card:nth-child(3n+3)::before { background:var(--green); }
+    .cat-card:nth-child(3n+1) .cat-card-icon { background:var(--orange-soft); color:var(--orange); }
+    .cat-card:nth-child(3n+2) .cat-card-icon { background:var(--blue-soft);   color:var(--blue);   }
+    .cat-card:nth-child(3n+3) .cat-card-icon { background:var(--green-soft);  color:var(--green);  }
+    .cat-card:nth-child(3n+1):hover { border-color:var(--orange-mid); box-shadow:0 8px 28px rgba(249,115,22,.15); }
+    .cat-card:nth-child(3n+2):hover { border-color:var(--blue-mid);   box-shadow:0 8px 28px rgba(37,99,235,.15);  }
+    .cat-card:nth-child(3n+3):hover { border-color:var(--green-mid);  box-shadow:0 8px 28px rgba(5,150,105,.15);  }
+    .cat-card:hover { transform:translateY(-4px); }
+    .cat-card-icon {
+      width:46px; height:46px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      margin-bottom:14px; transition:var(--trans);
+    }
+    .cat-card-icon svg { width:22px; height:22px; }
+    .cat-card-title { font-size:15px; font-weight:800; color:var(--text); margin-bottom:10px; line-height:1.4; }
+    .cat-card-footer { display:flex; gap:12px; align-items:center; padding-top:12px; border-top:1px solid var(--border); }
+    .cat-badge { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:var(--text-muted); }
+    .cat-badge-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .cat-card:nth-child(3n+1) .cat-badge-dot { background:var(--orange); }
+    .cat-card:nth-child(3n+2) .cat-badge-dot { background:var(--blue); }
+    .cat-card:nth-child(3n+3) .cat-badge-dot { background:var(--green); }
+
+    /* ══════════════════════════════════════════
+       CATEGORY PAGE — FULLY SEPARATE PAGE
+       This page replaces the dashboard entirely.
+       No overlays, no fixed positioning fighting
+       the scroll context. Just a normal scrolling
+       page with its own header and content area.
+    ══════════════════════════════════════════ */
+    #page-category {
+      background: var(--bg);
+    }
+
+    /* Category page header — navy, same as dashboard */
+    .cat-page-header {
+      background: var(--navy);
+      color: #fff;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,.25);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .cat-page-header-inner {
+      max-width: 1340px; margin: 0 auto; padding: 0 24px;
+      height: 64px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .back-btn {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff; cursor: pointer; padding: 8px;
+      border-radius: 9px; display: flex; align-items: center;
+      transition: var(--trans); flex-shrink: 0;
+    }
+    .back-btn:hover { background: rgba(255,255,255,.2); }
+    .back-btn svg { width: 20px; height: 20px; }
+
+    .cat-page-title-group { flex: 1; min-width: 0; }
+    .cat-page-title { font-size: 17px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cat-page-sub { font-size: 11px; color: rgba(255,255,255,.5); }
+
+    .cat-page-actions { display: flex; gap: 8px; align-items: center; }
+
+    .user-menu {
+      position: relative;
+    }
+    .user-menu-panel {
+      position: absolute; top: calc(100% + 8px); inset-inline-end: 0;
+      min-width: 210px; padding: 12px;
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      display: none; z-index: 30;
+    }
+    .user-menu.open .user-menu-panel { display: block; }
+    .user-menu-name { font-size: 14px; font-weight: 900; line-height: 1.3; }
+    .user-menu-role, .user-menu-access, .user-menu-years { margin-top: 4px; font-size: 12px; color: var(--text-muted); }
+    .user-menu-divider { height: 1px; background: var(--border); margin: 10px 0; }
+    .user-menu-logout {
+      width: 100%; border: 0; background: var(--orange-soft); color: var(--orange-deep);
+      border-radius: var(--radius-xs); padding: 8px 10px; cursor: pointer;
+      font-family: inherit; font-size: 12px; font-weight: 900;
+    }
+    .user-menu-logout:hover { background: var(--orange-mid); }
+    .ai-menu {
+      position: relative;
+      display: none;
+    }
+    .ai-menu-panel {
+      position: absolute; top: calc(100% + 8px); inset-inline-end: 0;
+      min-width: 230px; max-width: min(320px, calc(100vw - 32px));
+      padding: 8px;
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      display: none; z-index: 35;
+    }
+    .ai-menu.open .ai-menu-panel { display: block; }
+    .ai-menu-item {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 10px;
+      border-radius: var(--radius-xs);
+      color: var(--text); text-decoration: none;
+      font-size: 13px; font-weight: 800;
+      transition: var(--trans);
+    }
+    .ai-menu-item:hover { background: var(--blue-soft); color: var(--blue); }
+    .ai-menu-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .ai-menu-empty { padding: 10px; color: var(--text-muted); font-size: 12px; }
+    .admin-users-btn { display: none; }
+
+    /* Category page search toolbar */
+    .cat-toolbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 64px; z-index: 90;
+    }
+    .cat-toolbar-inner {
+      max-width: 1340px; margin: 0 auto; padding: 12px 24px;
+      display: flex; gap: 10px; align-items: center;
+    }
+
+    /* Document list area */
+    .cat-body {
+      max-width: 960px; margin: 0 auto;
+      padding: 24px 24px 60px;
+    }
+
+    /* Doc rows */
+    .doc-row {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      padding: 16px 18px; border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 14px;
+      transition: border-color .2s, box-shadow .2s;
+      box-shadow: var(--shadow-xs);
+    }
+    .doc-row:hover { border-color: var(--blue-mid); box-shadow: var(--shadow-sm); }
+    .doc-file-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: var(--blue-soft); color: var(--blue);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .doc-file-icon svg { width: 22px; height: 22px; }
+    .doc-info { flex: 1; min-width: 0; }
+    .doc-title { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+    .doc-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .doc-meta-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--bg); border: 1px solid var(--border);
+      padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+    }
+    .doc-meta-tag svg { width: 12px; height: 12px; }
+
+    .btn-group { display: flex; gap: 7px; flex-shrink: 0; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 8px 14px; border-radius: var(--radius-xs);
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--surface); color: var(--text);
+      font-family: inherit; transition: var(--trans);
+      text-decoration: none; white-space: nowrap;
+    }
+    .btn svg { width: 14px; height: 14px; }
+    .btn:hover { background: var(--bg); }
+    .btn-primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .btn-primary:hover { background: var(--navy-mid); }
+    .btn-outline { border-color: var(--blue); color: var(--blue); }
+    .btn-outline:hover { background: var(--blue-soft); }
+
+    /* ══════════════════════════════════════════
+       PDF PREVIEW MODAL
+       This sits on top of the category page,
+       not the dashboard. Same scroll context.
+    ══════════════════════════════════════════ */
+    .modal-bg {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.65);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .22s;
+      backdrop-filter: blur(4px);
+      padding: 16px;
+    }
+    .modal-bg.active { opacity: 1; pointer-events: auto; }
+    .modal-box {
+      background: var(--surface);
+      width: 100%; max-width: 980px;
+      height: 88vh;
+      border-radius: 16px; overflow: hidden;
+      display: flex; flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      transform: scale(.95); transition: transform .22s;
+    }
+    .modal-bg.active .modal-box { transform: scale(1); }
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 18px; border-bottom: 1px solid var(--border);
+      background: var(--bg); flex-shrink: 0; gap: 10px;
+    }
+    .modal-title { font-weight: 700; font-size: 14px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .modal-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .close-btn {
+      width: 34px; height: 34px; border-radius: var(--radius-xs);
+      border: 1px solid var(--border); background: var(--surface); color: var(--text-sec);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: var(--trans);
+    }
+    .close-btn svg { width: 16px; height: 16px; }
+    .close-btn:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+    .modal-iframe { flex: 1; border: none; background: #fff; }
+
+    .install-hint {
+      border: 1px solid var(--blue-mid); background: var(--blue-soft); color: var(--blue-deep);
+      padding: 10px 12px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700;
+    }
+
+    .users-admin-shell {
+      display: grid; grid-template-columns: 280px minmax(0,1fr);
+      min-height: 0; flex: 1; background: var(--surface);
+    }
+    .users-admin-list {
+      border-inline-end: 1px solid var(--border);
+      overflow: auto; background: var(--surface-2);
+    }
+    .users-admin-item {
+      width: 100%; border: 0; border-bottom: 1px solid var(--border);
+      background: transparent; color: var(--text); cursor: pointer;
+      padding: 12px 14px; text-align: inherit; font-family: inherit;
+    }
+    .users-admin-item:hover, .users-admin-item.active { background: var(--blue-soft); }
+    .users-admin-item-name { font-size: 13px; font-weight: 900; }
+    .users-admin-item-meta { margin-top: 3px; font-size: 11px; color: var(--text-muted); }
+    .users-admin-form {
+      padding: 16px; overflow: auto; display: grid; gap: 14px; align-content: start;
+    }
+    .users-form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+    .users-field label {
+      display: block; margin-bottom: 5px;
+      font-size: 12px; font-weight: 900; color: var(--text-sec);
+    }
+    .users-field input, .users-field select {
+      width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--surface); color: var(--text); font-family: inherit;
+      padding: 10px 12px; outline: none;
+    }
+    .users-check {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 800; color: var(--text-sec);
+    }
+    .users-check input { width: 16px; height: 16px; }
+    .users-categories {
+      display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr));
+      gap: 8px; max-height: 180px; overflow: auto;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 10px; background: var(--surface-2);
+    }
+    .users-status { font-size: 12px; color: var(--text-muted); min-height: 18px; }
+    .users-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
+    /* ══════════════════════════════════════════
+       EMPTY & ANIMATIONS
+    ══════════════════════════════════════════ */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-state svg { width: 52px; height: 52px; opacity: .35; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .cat-card { animation: fadeUp .4s cubic-bezier(.4,0,.2,1) both; }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 720px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .users-admin-shell { grid-template-columns: 1fr; }
+      .users-admin-list { max-height: 240px; border-inline-end: 0; border-bottom: 1px solid var(--border); }
+      .users-form-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .toolbar { top: 64px; }
+      .toolbar-inner { flex-direction: column; align-items: stretch; }
+      .cat-toolbar-inner { flex-direction: column; align-items: stretch; }
+      .main-container { padding: 20px 16px; }
+      .cat-body { padding: 16px 16px 60px; }
+      .doc-row { flex-wrap: wrap; }
+      .doc-row .btn-group { width: 100%; justify-content: flex-end; }
+      .header-inner { padding: 0 16px; }
+      .cat-page-header-inner { padding: 0 16px; }
+      .stats-grid { gap: 10px; }
+      .stat-card { padding: 16px; }
+      .stat-info > strong { font-size: 22px; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .cats-grid  { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ===== LOGIN SCREEN ===== -->
-<div id="loginOverlay" class="login-overlay">
-  <div class="login-card">
-    <img src="logo.png" alt="LYHA Logo" onerror="this.style.display='none'">
-    <h2 data-i18n="loginTitle">LYHA Archive System</h2>
-    <p class="subtitle" data-i18n="loginSubtitle">Please sign in to continue</p>
-    
-    <div class="login-input-group">
-      <label data-i18n="usernameLabel">Username</label>
-      <input type="text" class="login-input" id="loginUsername" autocomplete="username" placeholder="Enter username">
+<div id="page-loading">
+  <div class="loading-card">
+    <div class="loading-logo">
+      <img src="logo.png" alt="جمعية بيوت الشباب الليبية">
     </div>
-    <div class="login-input-group">
-      <label data-i18n="passwordLabel">Password</label>
-      <input type="password" class="login-input" id="loginPassword" autocomplete="current-password" placeholder="Enter password">
+    <div class="loading-spinner" aria-hidden="true"></div>
+    <div>
+      <div class="loading-title" id="loadingTitle">جاري تحميل الأرشيف</div>
+      <div class="loading-subtitle" id="loadingSubtitle">يتم جلب البيانات من الخادم...</div>
     </div>
-    
-    <button class="login-submit" id="loginSubmitBtn" data-i18n="loginBtn">Sign In</button>
-    
-    <div class="login-error" id="loginError"></div>
   </div>
 </div>
 
-<!-- ===== MAIN APP ===== -->
-<div class="container" id="mainApp" style="display:none;">
-  <header class="animate-in delay-1">
-    <div class="logo">
-      <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
-      <span data-i18n="appName">LYHA Archive System</span>
+<!-- ══════════════════════════════════════════
+     PAGE 0: LOGIN
+══════════════════════════════════════════ -->
+<div id="page-login" class="hidden">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="logo.png" alt="جمعية بيوت الشباب الليبية">
     </div>
-    <div class="header-right">
-      <div class="user-info">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span id="userDisplayName">Admin</span>
-        <span class="logout-link" onclick="handleLogout()" data-i18n="logout">Sign Out</span>
+    <div class="login-badge">
+      <span class="login-badge-dot"></span>
+      <span id="t-login-badge">الأرشيف الإلكتروني</span>
+    </div>
+    <div class="login-title" id="t-login-title">جمعية بيوت الشباب الليبية</div>
+    <div class="login-subtitle" id="t-login-sub">يرجى تسجيل الدخول للمتابعة</div>
+    <div class="login-field">
+      <label class="login-field-label" for="username" id="t-label-user">اسم المستخدم</label>
+      <input type="text" id="username" class="login-input" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label class="login-field-label" for="password" id="t-label-pass">كلمة المرور</label>
+      <input type="password" id="password" class="login-input" placeholder="••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="App.login()" id="t-login-btn">تسجيل الدخول</button>
+    <div id="loginError" class="login-error"></div>
+  </div>
+  <div class="login-footer" id="loginFooter">Created by Mujab Abed · All rights reserved · 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 1: DASHBOARD
+══════════════════════════════════════════ -->
+<div id="page-dashboard" class="page">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo-group" onclick="App.goToDashboard()">
+        <div class="logo-emblem">
+          <img src="logo.png" alt="جمعية بيوت الشباب الليبية">
+        </div>
+        <div class="logo-text">
+          <h1 id="t-header-title">نظام الأرشيف الإلكتروني</h1>
+          <p id="t-header-sub">جمعية بيوت الشباب الليبية</p>
+        </div>
       </div>
-      <button class="lang-btn" id="langToggle" onclick="toggleLang()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span id="langLabel">العربية</span>
-      </button>
+      <div class="header-actions">
+        <button class="icon-btn admin-users-btn" onclick="App.openUsersAdmin()" title="Edit users">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </button>
+        <button class="icon-btn" onclick="App.toggleTheme()" title="الوضع الليلي">
+          <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+        <button class="icon-btn lang-btn" onclick="App.toggleLang()" id="langToggleBtn">EN</button>
+        <div class="user-menu">
+          <button class="icon-btn user-menu-btn" onclick="App.toggleUserMenu(event)" title="User">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </button>
+          <div class="user-menu-panel">
+            <div class="user-menu-name"></div>
+            <div class="user-menu-role"></div>
+            <div class="user-menu-access"></div>
+            <div class="user-menu-years"></div>
+            <div class="user-menu-divider"></div>
+            <button class="user-menu-logout" onclick="App.logout()" data-user-logout>Logout</button>
+          </div>
+        </div>
+        <div class="ai-menu">
+          <button class="icon-btn ai-menu-btn" onclick="App.toggleAiMenu(event)" title="AI">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/><path d="M19 15l.9 2.6L22 18.5l-2.1.9L19 22l-.9-2.6-2.1-.9 2.1-.9L19 15z"/>
+            </svg>
+          </button>
+          <div class="ai-menu-panel"></div>
+        </div>
+      </div>
     </div>
   </header>
 
-  <div class="controls animate-in delay-1" style="margin-bottom:24px">
-    <div class="search-wrap">
-      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search by name, keyword, category...">
-    </div>
-    <select id="sortSelect">
-      <option value="name-asc" data-i18n-option="sortNameAZ">Name A-Z</option>
-      <option value="name-desc" data-i18n-option="sortNameZA">Name Z-A</option>
-      <option value="pages-desc" data-i18n-option="sortPagesDesc">Pages ↓</option>
-      <option value="pages-asc" data-i18n-option="sortPagesAsc">Pages ↑</option>
-      <option value="year-desc" data-i18n-option="sortYearDesc">Year ↓</option>
-      <option value="year-asc" data-i18n-option="sortYearAsc">Year ↑</option>
-    </select>
-  </div>
-
-  <div class="stats animate-in delay-2">
-    <div class="stat-card">
-      <div class="stat-icon icon-blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-      <div class="stat-title" data-i18n="totalDocs">Total Documents</div>
-      <div class="stat-val" id="totalDocs">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon icon-orange"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg></div>
-      <div class="stat-title" data-i18n="totalPages">Total Pages</div>
-      <div class="stat-val" id="totalPages">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon icon-green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
-      <div class="stat-title" data-i18n="avgPages">Avg Pages</div>
-      <div class="stat-val" id="avgPages">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon icon-blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 7v7"/><path d="M12 7v4"/><path d="M16 7v9"/></svg></div>
-      <div class="stat-title" data-i18n="totalCats">Categories</div>
-      <div class="stat-val" id="totalCats">0</div>
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div class="search-box">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="بحث بالاسم أو الفئة أو السنة..." oninput="App.handleSearch(this.value)">
+      </div>
+      <select class="select-input" id="sortSelect" onchange="App.handleSort(this.value)">
+        <option value="name-asc"   id="optNA">الاسم (أ–ي)</option>
+        <option value="name-desc"  id="optND">الاسم (ي–أ)</option>
+        <option value="pages-desc" id="optPD">الصفحات ↓</option>
+        <option value="pages-asc"  id="optPA">الصفحات ↑</option>
+      </select>
+      <select class="select-input" id="yearSelect" onchange="App.handleYear(this.value)"></select>
     </div>
   </div>
 
-  <div class="charts animate-in delay-3">
-    <div class="chart-box">
-      <div class="chart-title" data-i18n="chartByCategory">Documents by Category</div>
-      <svg id="catChart" class="chart-svg"></svg>
+  <div class="main-container">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-dot" style="background:var(--orange)"></span>
+          <span class="chart-title" id="t-chart-cat">المستندات حسب الفئة</span>
+        </div>
+        <div class="bar-chart-area" id="chartCategories"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-dot" style="background:var(--blue)"></span>
+          <span class="chart-title" id="t-chart-year">المستندات حسب السنة</span>
+        </div>
+        <div class="line-chart-area" id="chartYears"></div>
+      </div>
     </div>
-    <div class="chart-box">
-      <div class="chart-title" data-i18n="chartByYear">Documents by Year</div>
-      <svg id="yearChart" class="chart-svg"></svg>
+    <div class="chips-section">
+      <div class="chips-label" id="t-chips-label">تصفية حسب الفئة</div>
+      <div class="chips-row" id="chipsContainer"></div>
     </div>
+    <div class="section-header">
+      <span class="section-title-text" id="t-cat-title">الفئات</span>
+      <span class="section-count" id="catCountDisplay"></span>
+    </div>
+    <div class="cats-grid" id="categoriesGrid"></div>
   </div>
-
-  <div id="categoriesContainer" class="categories animate-in delay-3"></div>
 </div>
 
-<!-- ===== FULL PAGE OVERLAY ===== -->
-<div id="fullpageOverlay" class="fullpage-overlay">
-  <div class="fp-header">
-    <div class="fp-title-section">
-      <span id="fpTitleName" class="fp-title"></span>
-      <span id="fpBadge" class="fp-badge"></span>
+<!-- ══════════════════════════════════════════
+     PAGE 2: CATEGORY VIEW
+     Completely separate page — own scroll root.
+     No overlay, no fixed-on-top-of-dashboard.
+══════════════════════════════════════════ -->
+<div id="page-category" class="page">
+
+  <!-- Sticky header for the category page -->
+  <div class="cat-page-header">
+    <div class="cat-page-header-inner">
+      <button class="back-btn" onclick="App.goToDashboard()">
+        <!-- Arrow right for RTL (visually = go back) -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </button>
+      <div class="cat-page-title-group">
+        <div class="cat-page-title" id="catPageTitle">الفئة</div>
+        <div class="cat-page-sub" id="catPageSub"></div>
+      </div>
+      <div class="cat-page-actions">
+        <button class="icon-btn admin-users-btn" onclick="App.openUsersAdmin()" title="Edit users">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </button>
+        <button class="icon-btn" onclick="App.toggleTheme()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+        <button class="icon-btn lang-btn" onclick="App.toggleLang()" id="catLangBtn">EN</button>
+        <div class="user-menu">
+          <button class="icon-btn user-menu-btn" onclick="App.toggleUserMenu(event)" title="User">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </button>
+          <div class="user-menu-panel">
+            <div class="user-menu-name"></div>
+            <div class="user-menu-role"></div>
+            <div class="user-menu-access"></div>
+            <div class="user-menu-years"></div>
+            <div class="user-menu-divider"></div>
+            <button class="user-menu-logout" onclick="App.logout()" data-user-logout>Logout</button>
+          </div>
+        </div>
+        <div class="ai-menu">
+          <button class="icon-btn ai-menu-btn" onclick="App.toggleAiMenu(event)" title="AI">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/><path d="M19 15l.9 2.6L22 18.5l-2.1.9L19 22l-.9-2.6-2.1-.9 2.1-.9L19 15z"/>
+            </svg>
+          </button>
+          <div class="ai-menu-panel"></div>
+        </div>
+      </div>
     </div>
-    <div class="fp-search">
-      <svg class="fp-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="fpSearchInput" data-i18n-placeholder="fpSearchPlaceholder" placeholder="Search within this category...">
-    </div>
-    <button class="fp-close" id="closeFullPage">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-    </button>
   </div>
-  <div id="fpListContainer" class="fp-container file-list"></div>
+
+  <!-- Sticky search inside category -->
+  <div class="cat-toolbar">
+    <div class="cat-toolbar-inner">
+      <div class="search-box" style="flex:1">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="catSearch" placeholder="بحث في هذه الفئة..." oninput="App.handleCatSearch(this.value)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Document list — scrolls naturally, no scroll-lock needed -->
+  <div class="cat-body" id="catDocList"></div>
+
 </div>
 
-<!-- ===== PDF MODAL ===== -->
-<div id="pdfModal" class="modal">
+<!-- ══════════════════════════════════════════
+     PDF PREVIEW MODAL
+     position:fixed, but sits on category page,
+     not fighting dashboard scroll.
+══════════════════════════════════════════ -->
+<div id="pdfModal" class="modal-bg" onclick="App.handleModalBgClick(event)">
   <div class="modal-box">
     <div class="modal-head">
-      <span id="modalTitle" class="modal-title"></span>
-      <button class="close-btn" id="closeModal">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
+      <span class="modal-title" id="modalTitle"></span>
+      <div class="modal-actions">
+        <a id="modalExtLink" href="#" target="_blank" rel="noopener" class="btn btn-outline" style="font-size:12px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          <span id="t-modal-open">فتح</span>
+        </a>
+        <button class="close-btn" onclick="App.closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
     </div>
-    <iframe id="modalFrame" class="modal-iframe" src=""></iframe>
+    <iframe id="modalFrame" class="modal-iframe" src="" allow="fullscreen"></iframe>
+  </div>
+</div>
+
+<div id="usersModal" class="modal-bg" onclick="App.handleUsersModalBgClick(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title" id="usersModalTitle">إدارة المستخدمين</span>
+      <div class="modal-actions">
+        <button class="close-btn" onclick="App.closeUsersAdmin()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="users-admin-shell">
+      <div class="users-admin-list" id="usersAdminList"></div>
+      <div class="users-admin-form" id="usersAdminForm"></div>
+    </div>
   </div>
 </div>
 
 <script>
+/* ══════════════════════════════════════════════════════════════
+   LYHA Archive v3 — Page-switching SPA architecture
+   Mobile scroll fix: category view is a full page, not an overlay
+══════════════════════════════════════════════════════════════ */
 
-window.onerror = function (msg, url, line, col, error) {
-  console.error("GLOBAL ERROR:", msg, "at", line + ":" + col);
+// ── FALLBACK DATA ──────────────────────────────────────────────
+const FALLBACK_DATA = [
+  { name:"الاتحاد الأفريقي",       name_en:"African Union",           category:"المنظمات",    category_en:"Organizations",  years:[2005,2006], pages:88,  path:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+  { name:"تقرير مالي 2010",         name_en:"Financial Report 2010",   category:"التقارير",    category_en:"Reports",        years:[2010],      pages:45,  path:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+  { name:"تقرير نشاط 2012",         name_en:"Activity Report 2012",    category:"التقارير",    category_en:"Reports",        years:[2012],      pages:52 },
+  { name:"تقرير نشاط 2015",         name_en:"Activity Report 2015",    category:"التقارير",    category_en:"Reports",        years:[2015],      pages:60 },
+  { name:"مراسلة وزارة الشباب",      name_en:"Ministry of Youth Corr.",category:"المراسلات",   category_en:"Correspondence", years:[2008],      pages:5  },
+  { name:"مراسلة وزارة السياحة",     name_en:"Tourism Ministry Corr.", category:"المراسلات",   category_en:"Correspondence", years:[2009],      pages:4  },
+  { name:"عقد صيانة",               name_en:"Maintenance Contract",    category:"العقود",      category_en:"Contracts",      years:[2015],      pages:12 },
+  { name:"عقد خدمات",               name_en:"Services Contract",       category:"العقود",      category_en:"Contracts",      years:[2016],      pages:14 },
+  { name:"محضر اجتماع 2011",         name_en:"Meeting Minutes 2011",    category:"المحاضر",     category_en:"Minutes",        years:[2011],      pages:8  },
+  { name:"محضر اجتماع 2013",         name_en:"Meeting Minutes 2013",    category:"المحاضر",     category_en:"Minutes",        years:[2013],      pages:9  },
+  { name:"اتفاقية تعاون دولي",       name_en:"International Agreement", category:"الاتفاقيات",  category_en:"Agreements",     years:[2007,2008], pages:22 },
+  { name:"قرار إداري 2014",          name_en:"Admin Decision 2014",     category:"القرارات",    category_en:"Decisions",      years:[2014],      pages:3  },
+];
+
+const SHEET_JSON_URL = 'https://script.google.com/macros/s/AKfycbxK4JmWPuBuXXSho9DbAMh7FN_THwe6hOqKsuYcg8L5BJhDhZcsRTKfcIPIVoiXmdponA/exec';
+const USER_SESSION_KEY = 'lyha_user_session';
+
+// ── I18N ───────────────────────────────────────────────────────
+const I18N = {
+  ar: {
+    loginBadge:"الأرشيف الإلكتروني", loginTitle:"جمعية بيوت الشباب الليبية",
+    loginSub:"يرجى تسجيل الدخول للمتابعة", loginBtn:"تسجيل الدخول",
+    labelUser:"اسم المستخدم", labelPass:"كلمة المرور",
+    errLogin:"بيانات الدخول غير صحيحة",
+    errLoginNetwork:"تعذر الاتصال بخدمة تسجيل الدخول",
+    loadingTitle:"جاري تحميل الأرشيف", loadingSubtitle:"يتم جلب البيانات من الخادم..",
+    helloLabel:"مرحبا,", roleLabel:"الدور", accessLabel:"الفئات", yearAccessLabel:"السنوات", allCategories:"كل الفئات", noDate:"بدون تاريخ", logout:"خروج", aiEmpty:"لا توجد روابط AI متاحة",
+    usersAdminTitle:"إدارة المستخدمين", usernameLabel:"اسم المستخدم", givenNameLabel:"الاسم", emailLabel:"البريد الإلكتروني", passwordLabel:"كلمة المرور",
+    activeLabel:"مفعل", allowedCategoriesLabel:"الفئات المسموحة", allowedYearsLabel:"السنوات المسموحة",
+    allCategoriesChoice:"كل الفئات", allYearsChoice:"كل السنوات", startYearLabel:"من سنة", endYearLabel:"إلى سنة",
+    includeNoDateLabel:"تضمين بدون تاريخ", saveUserLabel:"حفظ المستخدم", syncDriveLabel:"مزامنة الصلاحيات", syncDriveWorking:"جاري تجهيز مزامنة صلاحيات Drive...", syncDriveDone:"بدأت مزامنة صلاحيات Drive في الخلفية", userSaved:"تم حفظ المستخدم", userLoadError:"تعذر تحميل المستخدمين",
+    headerTitle:"نظام الأرشيف الإلكتروني", headerSub:"جمعية بيوت الشباب الليبية",
+    search:"بحث بالاسم أو الفئة أو السنة...", searchCat:"بحث في هذه الفئة...",
+    totalDocs:"إجمالي المستندات", totalPages:"إجمالي الصفحات",
+    avgPages:"متوسط الصفحات", cats:"فئة",
+    chartCat:"المستندات حسب الفئة", chartYear:"المستندات حسب السنة",
+    chipsLabel:"تصفية حسب الفئة",
+    catTitle:"الفئات", all:"الكل", allYears:"كل السنوات",
+    optNA:"الاسم (أ–ي)", optND:"الاسم (ي–أ)", optPD:"الصفحات ↓", optPA:"الصفحات ↑",
+    docs:"مستند", pages:"صفحة", preview:"معاينة", open:"فتح",
+    empty:"لا توجد نتائج مطابقة", docsCount:"مستند",
+    backToDash:"العودة للرئيسية",
+  },
+  en: {
+    loginBadge:"Electronic Archive", loginTitle:"Libyan Youth Hostels Association",
+    loginSub:"Please sign in to continue", loginBtn:"Sign In",
+    labelUser:"Username", labelPass:"Password",
+    errLogin:"Invalid credentials",
+    errLoginNetwork:"Could not reach the login service",
+    loadingTitle:"Loading Archive", loadingSubtitle:"Reading data from Google Sheets", loginLoadingSubtitle:"Checking your credentials...",
+    loginFooter:"بواسطة مجاب عبيد · جميع الحقوق محفوظة · 2026",
+    helloLabel:"Hello", roleLabel:"Role", accessLabel:"Categories", yearAccessLabel:"Years", allCategories:"All categories", noDate:"No date", logout:"Logout", aiEmpty:"No AI links available",
+    usersAdminTitle:"User Management", usernameLabel:"Username", givenNameLabel:"Name", emailLabel:"Email", passwordLabel:"Password",
+    activeLabel:"Active", allowedCategoriesLabel:"Allowed Categories", allowedYearsLabel:"Allowed Years",
+    allCategoriesChoice:"All categories", allYearsChoice:"All years", startYearLabel:"Start year", endYearLabel:"End year",
+    includeNoDateLabel:"Include no-date files", saveUserLabel:"Save User", syncDriveLabel:"Sync Drive Access", syncDriveWorking:"Preparing Drive permission sync...", syncDriveDone:"Drive permission sync started in the background", userSaved:"User saved", userLoadError:"Could not load users",
+    headerTitle:"Electronic Archive System", headerSub:"LYHA",
+    search:"Search by name, category or year...", searchCat:"Search in this category...",
+    totalDocs:"Total Documents", totalPages:"Total Pages",
+    avgPages:"Avg. Pages", cats:"categories",
+    chartCat:"Documents by Category", chartYear:"Documents by Year",
+    chipsLabel:"Filter by category",
+    catTitle:"Categories", all:"All", allYears:"All Years",
+    optNA:"Name (A–Z)", optND:"Name (Z–A)", optPD:"Pages ↓", optPA:"Pages ↑",
+    docs:"doc", pages:"pages", preview:"Preview", open:"Open",
+    empty:"No matching results", docsCount:"docs",
+    backToDash:"Back to Dashboard",
+  }
 };
 
-  // ===== SIMPLE AUTH =====
-  const AUTH_CREDENTIALS = { username: 'admin', password: 'admin' };
-  const SESSION_KEY = 'lyha_auth_session';
+// ── STATE ──────────────────────────────────────────────────────
+const State = {
+  raw:      [],
+  filtered: [],
+  lang:     'ar',
+  theme:    localStorage.getItem('lyha_dark') === '1' ? 'dark' : 'light',
+  filters:  { q:'', sort:'name-asc', year:'all', cat:null },
+  catPage:  { cat:null, q:'' },
+  user:     null,
+  aiLinks:  [],
+  usersAdmin: { users: [], selected: 0, message: '' },
+  view:     'dashboard', // 'login' | 'dashboard' | 'category'
+};
 
- function handleLogin() {
-  try {
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
-    const errorEl = document.getElementById('loginError');
+// ── HELPERS ────────────────────────────────────────────────────
+const H = {
+  $(id)         { return document.getElementById(id); },
+  txt(id, t)    { const e=this.$(id); if(e) e.textContent=t; },
+  plh(id, t)    { const e=this.$(id); if(e) e.placeholder=t; },
+  getCatName(cat) {
+    if(State.lang==='ar') return cat;
+    const d = State.raw.find(x=>x.category===cat);
+    return d?.category_en || cat;
+  },
+  getDocName(doc) { return State.lang==='ar' ? doc.name : (doc.name_en||doc.name); },
+  esc(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); },
+  html(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  },
+};
 
-    console.log("Login attempt:", username, password);
+// Chart colours
+const BAR_COLORS = ['#f97316','#2563eb','#059669','#7c3aed','#db2777','#0891b2'];
+const AREA_COLOR = '#2563eb';
 
-    if (username === AUTH_CREDENTIALS.username && password === AUTH_CREDENTIALS.password) {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({
-        username: username,
-        loginTime: Date.now()
-      }));
+// ── APP ────────────────────────────────────────────────────────
+const App = {
 
-      console.log("Login success");
+  async init() {
+    this.applyTheme();
+    State.user = this.readStoredUser();
+    const hasSession = !!State.user;
+    this.applyLang();
+    State.raw = await this.loadArchiveData();
+    State.aiLinks = await this.loadAiLinks();
+    this.showLoading(false);
+    if (hasSession) this.boot();
+    else this.showPage('login');
+  },
 
-      // SAFE LOAD
-      document.getElementById('loginOverlay').classList.add('hidden');
-      document.getElementById('mainApp').style.display = 'block';
+  async loadArchiveData() {
+    const sources = [
+      `${SHEET_JSON_URL}?action=data&t=${Date.now()}`,
+      './data.json'
+    ];
 
-      // ONLY run app logic AFTER login
-      if (!filteredData.length) {
-        filteredData = Array.isArray(archiveData) ? [...archiveData] : [];
-      }
-
+    for (const url of sources) {
       try {
-        renderAll();
-        applyTranslations();
-        bindEvents();
+        const r = await fetch(url, { cache: 'no-store' });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        if (!Array.isArray(data)) throw new Error('Archive data must be an array');
+        return data.map(doc => this.normalizeDoc(doc));
       } catch (err) {
-        console.error("App render error:", err);
+        console.warn('[LYHA] data source failed:', url, err);
       }
-
-    } else {
-      errorEl.textContent = "Invalid username or password";
-      errorEl.classList.add('visible');
     }
 
-  } catch (err) {
-    console.error("Login crashed:", err);
-  }
-}
-  function handleLogout() {
-    localStorage.removeItem(SESSION_KEY);
-    showLoginScreen();
-  }
+    return FALLBACK_DATA.map(doc => this.normalizeDoc(doc));
+  },
 
-  function showLoginScreen() {
-    document.getElementById('loginOverlay').classList.remove('hidden');
-    document.getElementById('mainApp').style.display = 'none';
-    document.getElementById('loginUsername').value = '';
-    document.getElementById('loginPassword').value = '';
-    document.getElementById('loginError').classList.remove('visible');
-    document.getElementById('loginUsername').focus();
-  }
-
-  function showApp() {
-    document.getElementById('loginOverlay').classList.add('hidden');
-    document.getElementById('mainApp').style.display = 'block';
-    filteredData = [...archiveData];
-    renderAll();
-    applyTranslations();
-    bindEvents();
-  }
-
-  // Check existing session
-  function checkSession() {
-    const saved = localStorage.getItem(SESSION_KEY);
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        if (data.username === AUTH_CREDENTIALS.username) {
-          showApp();
-          return;
-        }
-      } catch(e) {}
-    }
-    showLoginScreen();
-  }
-
-  // Shake keyframe
-  const shakeStyle = document.createElement('style');
-  shakeStyle.textContent = `@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }`;
-  document.head.appendChild(shakeStyle);
-
-  // ===== i18n Translations =====
-  const translations = {
-    en: {
-      appName: "LYHA Archive System",
-      searchPlaceholder: "Search by name, keyword, category...",
-      sortNameAZ: "Name A-Z",
-      sortNameZA: "Name Z-A",
-      sortPagesDesc: "Pages ↓",
-      sortPagesAsc: "Pages ↑",
-      sortYearDesc: "Year ↓",
-      sortYearAsc: "Year ↑",
-      totalDocs: "Total Documents",
-      totalPages: "Total Pages",
-      avgPages: "Avg Pages",
-      totalCats: "Categories",
-      chartByCategory: "Documents by Category",
-      chartByYear: "Documents by Year",
-      fpSearchPlaceholder: "Search within this category...",
-      documents: "documents",
-      previewBtn: "Preview",
-      openBtn: "Open ↗",
-      noDocs: "No documents found in this category.",
-      noMatch: "No documents match your search.",
-      noYearData: "No year data",
-      pagesTotal: (n) => `${n.toLocaleString()} pages total`,
-      pagesLabel: (n) => `${n} pages`,
-      langLabel: "العربية",
-      loginTitle: "LYHA Archive System",
-      loginSubtitle: "Please sign in to continue",
-      usernameLabel: "Username",
-      passwordLabel: "Password",
-      loginBtn: "Sign In",
-      logout: "Sign Out"
-    },
-    ar: {
-      appName: "نظام الارشيف الالكتروني - جمعية بيوت الشباب الليبية",
-      searchPlaceholder: "بحث بالاسم، السنة، أو الفئة...",
-      sortNameAZ: "الاسم (أ-ي)",
-      sortNameZA: "الاسم (ي-أ)",
-      sortPagesDesc: "الصفحات ↓",
-      sortPagesAsc: "الصفحات ↑",
-      sortYearDesc: "السنة ↓",
-      sortYearAsc: "السنة ↑",
-      totalDocs: "إجمالي المستندات",
-      totalPages: "إجمالي الصفحات",
-      avgPages: "متوسط الصفحات",
-      totalCats: "عدد الفئات",
-      chartByCategory: "المستندات حسب الفئة",
-      chartByYear: "المستندات حسب السنة",
-      fpSearchPlaceholder: "بحث داخل هذه الفئة...",
-      documents: "مستندات",
-      previewBtn: "معاينة",
-      openBtn: "فتح ↗",
-      noDocs: "لا توجد مستندات في هذه الفئة.",
-      noMatch: "لا توجد مستندات مطابقة.",
-      noYearData: "لا توجد بيانات",
-      pagesTotal: (n) => `${n.toLocaleString()} صفحة إجمالاً`,
-      pagesLabel: (n) => `${n} صفحة`,
-      langLabel: "English",
-      loginTitle: "نظام الارشيف الالكتروني",
-      loginSubtitle: "يرجى تسجيل الدخول للمتابعة",
-      usernameLabel: "اسم المستخدم",
-      passwordLabel: "كلمة المرور",
-      loginBtn: "تسجيل الدخول",
-      logout: "تسجيل الخروج"
-    }
-  };
-
-  let currentLang = 'en';
-
-  function toggleLang() {
-    currentLang = currentLang === 'en' ? 'ar' : 'en';
-    const html = document.documentElement;
-    html.setAttribute('lang', currentLang);
-    html.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
-    applyTranslations();
-  }
-
-  function applyTranslations() {
-  const t = translations[currentLang];
-
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (t[key]) el.textContent = t[key];
-  });
-
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-i18n-placeholder');
-    if (t[key]) el.placeholder = t[key];
-  });
-
-  document.querySelectorAll('select option').forEach(opt => {
-    const key = opt.getAttribute('data-i18n-option');
-    if (key && t[key]) opt.textContent = t[key];
-  });
-
-  document.getElementById('langLabel').textContent = t.langLabel;
-
-  // 🔥 ADD THESE
-  renderStats();
-  renderCharts();   // <-- THIS is what you’re missing
-  renderCategories();
-
-  if (fpCategory) renderFullPageList();
-}
-
-  // ===== Fallback Data =====
-  const FALLBACK_DATA = [
-    {
-      name: "الاتحاد الافريقي",
-      name_en: "LYHA-AfricanUnion.pdf",
-      keywords: "1998 1997 1996",
-      years: [2005, 2006, 2007, 2008, 2009, 2010],
-      path: "pdfs/AfricanUnion/LYHA-AfricanUnion.pdf",
-      category: "الاتحاد الافريقي",
-      category_en: "AfricanUnion",
-      pages: 88
-    }
-  ];
-  
-  let archiveData = [];
-  let filteredData = [];
-  let fpCategory = null;
-  const state = { search: '', sortBy: 'name-asc', fpSearch: '' };
-  let scrollPos = 0;
-
-  const catColors = {
-    default: { bg: '#dbeafe', color: '#3b82f6' },
-    colors: [
-      { bg: '#dbeafe', color: '#3b82f6' },
-      { bg: '#ffedd5', color: '#f97316' },
-      { bg: '#d1fae5', color: '#10b981' },
-      { bg: '#ede9fe', color: '#8b5cf6' },
-      { bg: '#fef3c7', color: '#d97706' },
-      { bg: '#fce7f3', color: '#ec4899' },
-      { bg: '#ccfbf1', color: '#14b8a6' },
-      { bg: '#fee2e2', color: '#ef4444' },
-    ]
-  };
-
-  function getCategoryColor(cat) {
-    const idx = Object.keys(getGroupedCategories()).indexOf(cat) % catColors.colors.length;
-    return catColors.colors[idx] || catColors.default;
-  }
-
-  // ===== Init =====
-  document.addEventListener('DOMContentLoaded', async () => {
+  async loadAiLinks() {
     try {
-      const res = await fetch('./data.json');
-      if (!res.ok) throw new Error('Fetch failed');
-      const json = await res.json();
-      archiveData = Array.isArray(json) ? json : FALLBACK_DATA;
-    } catch (e) {
-      console.warn('data.json not found, using embedded fallback');
-      archiveData = FALLBACK_DATA;
+      const r = await fetch(`${SHEET_JSON_URL}?action=ai&t=${Date.now()}`, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      if (!Array.isArray(data)) return [];
+      return data
+        .map(item => ({
+          name_ar: String(item.name_ar || item.name || '').trim(),
+          name_en: String(item.name_en || item.title || item.name_ar || '').trim(),
+          url: String(item.url || '').trim(),
+          years: Array.isArray(item.years) ? item.years.map(Number).filter(Number.isFinite) : this.parseYears(`${item.name_ar || ''} ${item.name_en || ''} ${item.url || ''}`)
+        }))
+        .filter(item => item.url);
+    } catch (err) {
+      console.warn('[LYHA] AI links failed:', err);
+      return [];
     }
-    checkSession();
-  });
+  },
 
-  function bindEvents() {
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      state.search = e.target.value.toLowerCase();
-      applyFilters();
-    });
-    document.getElementById('sortSelect').addEventListener('change', (e) => {
-      state.sortBy = e.target.value;
-      applyFilters();
-    });
-    document.getElementById('fpSearchInput').addEventListener('input', (e) => {
-      state.fpSearch = e.target.value.toLowerCase();
-      renderFullPageList();
-    });
-    document.getElementById('closeModal').addEventListener('click', closeModal);
-    document.getElementById('pdfModal').addEventListener('click', (e) => {
-      if (e.target.id === 'pdfModal') closeModal();
-    });
-    document.getElementById('closeFullPage').addEventListener('click', closeFullPage);
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeModal();
-        if(document.getElementById('fullpageOverlay').classList.contains('active')) closeFullPage();
+  // ── AUTH ─────────────────────────────────────────────────
+  async login() {
+    const u = H.$('username').value.trim();
+    const p = H.$('password').value;
+    const btn = H.$('t-login-btn');
+
+    if (!u || !p) {
+      H.$('loginError').textContent = I18N[State.lang].errLogin;
+      H.$('loginError').style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    this.setLoadingSubtitle(I18N[State.lang].loginLoadingSubtitle || I18N[State.lang].loadingSubtitle);
+    this.showLoading(true);
+    try {
+      const result = await this.checkCredentials(u, p);
+      if (!result.ok) {
+        H.$('loginError').textContent = result.message || I18N[State.lang].errLogin;
+        H.$('loginError').style.display = 'block';
+        return;
       }
-	  // FORCE LOGIN BUTTON TO WORK ALWAYS
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('loginSubmitBtn').onclick = handleLogin;
-});
+
+      State.user = {
+        username: result.username || u,
+        name: result.name || result.username || u,
+        email: result.email || '',
+        role: result.role || 'user',
+        token: result.token || '',
+        allowedCategories: this.normalizeAllowedCategories(result.allowed_categories || result.allowedCategories),
+        allowedYears: this.normalizeYearAccess(result.allowed_years || result.allowedYears)
+      };
+      localStorage.setItem(USER_SESSION_KEY, JSON.stringify(State.user));
+      localStorage.setItem('lyha_auth','1');
+      H.$('loginError').style.display = 'none';
+      H.$('password').value = '';
+      this.showLoading(false);
+      this.setLoadingSubtitle(I18N[State.lang].loadingSubtitle);
+      this.boot();
+    } catch (err) {
+      console.warn('[LYHA] login failed:', err);
+      H.$('loginError').textContent = I18N[State.lang].errLoginNetwork;
+      H.$('loginError').style.display = 'block';
+    } finally {
+      if (!State.user) this.showLoading(false);
+      this.setLoadingSubtitle(I18N[State.lang].loadingSubtitle);
+      btn.disabled = false;
+    }
+  },
+
+  async checkCredentials(username, password) {
+    return this.postAction({ action: 'login', username, password });
+  },
+
+  async postAction(payload) {
+    const r = await fetch(SHEET_JSON_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
     });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  },
 
-    // Login form events
-    document.getElementById('loginSubmitBtn').addEventListener('click', handleLogin);
-    document.getElementById('loginPassword').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') handleLogin();
+  readStoredUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem(USER_SESSION_KEY) || 'null');
+      if (user && user.username) return user;
+    } catch {}
+    if (localStorage.getItem('lyha_auth') === '1') {
+      return { username: 'admin', name: 'admin', role: 'admin', token: '', allowedCategories: ['*'], allowedYears: { all: true, includeNoDate: true, years: [] } };
+    }
+    return null;
+  },
+
+  logout() {
+    localStorage.removeItem('lyha_auth');
+    localStorage.removeItem(USER_SESSION_KEY);
+    State.user = null;
+    this.closeUserMenus();
+    this.closeAiMenus();
+    this.closeUsersAdmin();
+    this.renderAdminControls();
+    this.renderAiControls();
+    this.showPage('login');
+  },
+
+  showLoading(show) {
+    H.$('page-loading').classList.toggle('hidden', !show);
+  },
+
+  setLoadingSubtitle(text) {
+    H.txt('loadingSubtitle', text || I18N[State.lang].loadingSubtitle);
+  },
+
+  toggleUserMenu(event) {
+    event.stopPropagation();
+    this.closeAiMenus();
+    const menu = event.currentTarget.closest('.user-menu');
+    document.querySelectorAll('.user-menu.open').forEach(openMenu => {
+      if (openMenu !== menu) openMenu.classList.remove('open');
     });
-    document.getElementById('loginUsername').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+    menu.classList.toggle('open');
+  },
+
+  closeUserMenus() {
+    document.querySelectorAll('.user-menu.open').forEach(menu => menu.classList.remove('open'));
+  },
+
+  toggleAiMenu(event) {
+    event.stopPropagation();
+    this.closeUserMenus();
+    const menu = event.currentTarget.closest('.ai-menu');
+    document.querySelectorAll('.ai-menu.open').forEach(openMenu => {
+      if (openMenu !== menu) openMenu.classList.remove('open');
     });
-  }
+    menu.classList.toggle('open');
+  },
 
-  function applyFilters() {
-    filteredData = archiveData.filter(item => {
-  const search = state.search;
+  closeAiMenus() {
+    document.querySelectorAll('.ai-menu.open').forEach(menu => menu.classList.remove('open'));
+  },
 
-  return (
-    (item.name || '').toLowerCase().includes(search) ||
-    (item.name_en || '').toLowerCase().includes(search) ||
-    (item.keywords || '').toLowerCase().includes(search) ||
-    (item.category || '').toLowerCase().includes(search) ||
-    (item.category_en || '').toLowerCase().includes(search) ||
-    (Array.isArray(item.years) && item.years.some(y => y.toString().includes(search)))
-  );
-});
+  renderUserMenus() {
+    const t = I18N[State.lang];
+    const user = State.user || { name: '-', username: '-', role: '-' };
+    const displayName = user.name || user.username || '-';
+    const role = user.role || '-';
+    const categories = this.normalizeAllowedCategories(user.allowedCategories || user.allowed_categories);
+    const yearAccess = this.normalizeYearAccess(user.allowedYears || user.allowed_years);
+    const categoryText = this.hasAllCategoryAccess(categories)
+      ? t.allCategories
+      : (categories.join(', ') || t.allCategories);
+    const yearText = this.yearAccessText(yearAccess);
 
-    filteredData.sort((a, b) => {
-      const nameA = currentLang === 'ar' ? (a.name || '') : (a.name_en || a.name || '');
-      const nameB = currentLang === 'ar' ? (b.name || '') : (b.name_en || b.name || '');
-      switch(state.sortBy) {
-        case 'name-asc': return nameA.localeCompare(nameB, currentLang);
-        case 'name-desc': return nameB.localeCompare(nameA, currentLang);
-        case 'pages-asc': return (a.pages || 0) - (b.pages || 0);
-        case 'pages-desc': return (b.pages || 0) - (a.pages || 0);
-        case 'year-asc': return getAvgYear(a) - getAvgYear(b);
-        case 'year-desc': return getAvgYear(b) - getAvgYear(a);
+    document.querySelectorAll('.user-menu-name').forEach(el => { el.textContent = `${t.helloLabel} ${displayName}`; });
+    document.querySelectorAll('.user-menu-role').forEach(el => { el.textContent = `${t.roleLabel}: ${role}`; });
+    document.querySelectorAll('.user-menu-access').forEach(el => { el.textContent = `${t.accessLabel}: ${categoryText}`; });
+    document.querySelectorAll('.user-menu-years').forEach(el => { el.textContent = `${t.yearAccessLabel}: ${yearText}`; });
+    document.querySelectorAll('[data-user-logout]').forEach(el => { el.textContent = t.logout; });
+  },
+
+  isAdmin() {
+    return String(State.user?.role || '').toLowerCase() === 'admin';
+  },
+
+  renderAdminControls() {
+    document.querySelectorAll('.admin-users-btn').forEach(btn => {
+      btn.style.display = this.isAdmin() ? 'inline-flex' : 'none';
+    });
+  },
+
+  renderAiControls() {
+    const visible = this.canUseAi();
+    const items = visible ? this.allowedAiLinks() : [];
+
+    document.querySelectorAll('.ai-menu').forEach(menu => {
+      menu.style.display = visible ? 'block' : 'none';
+      const panel = menu.querySelector('.ai-menu-panel');
+      if (!panel) return;
+
+      panel.innerHTML = items.length ? items.map(item => {
+        const label = State.lang === 'ar' ? (item.name_ar || item.name_en) : (item.name_en || item.name_ar);
+        return `
+          <a class="ai-menu-item" href="${H.html(item.url)}" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/>
+            </svg>
+            <span>${H.html(label || item.url)}</span>
+          </a>`;
+      }).join('') : `<div class="ai-menu-empty">${I18N[State.lang].aiEmpty}</div>`;
+    });
+  },
+
+  canUseAi() {
+    const categories = this.normalizeAllowedCategories(State.user?.allowedCategories || State.user?.allowed_categories);
+    const hasHeadQuarter = this.hasAllCategoryAccess(categories) || categories.some(category => {
+      const key = this.categoryKey(category).replace(/\s+/g, '');
+      return key === 'headquarter' || key === 'headquarters' || key === 'hq' || key.includes('الديوان');
+    });
+    if (!hasHeadQuarter) return false;
+
+    const yearAccess = this.normalizeYearAccess(State.user?.allowedYears || State.user?.allowed_years);
+    if (yearAccess.all) return true;
+    return yearAccess.years.some(year => Number(year) >= 2022);
+  },
+
+  allowedAiLinks() {
+    const yearAccess = this.normalizeYearAccess(State.user?.allowedYears || State.user?.allowed_years);
+    if (yearAccess.all) return State.aiLinks;
+    const allowedYears = new Set(yearAccess.years.filter(year => Number(year) >= 2022));
+    return State.aiLinks.filter(item => {
+      const years = item.years || [];
+      if (!years.length) return true;
+      return years.some(year => allowedYears.has(Number(year)));
+    });
+  },
+
+  async openUsersAdmin() {
+    if (!this.isAdmin()) return;
+    this.closeUserMenus();
+    H.$('usersModal').classList.add('active');
+    H.txt('usersModalTitle', I18N[State.lang].usersAdminTitle);
+    State.usersAdmin.message = '';
+    H.$('usersAdminList').innerHTML = `<div class="empty-state" style="padding:24px"><p>${I18N[State.lang].loadingTitle}</p></div>`;
+    H.$('usersAdminForm').innerHTML = '';
+
+    try {
+      const data = await this.postAction({ action: 'listUsers', token: State.user?.token });
+      if (!data.ok) throw new Error(data.message || I18N[State.lang].userLoadError);
+      State.usersAdmin.users = (data.users || []).map(user => ({ ...user, original_username: user.username }));
+      State.usersAdmin.selected = 0;
+      this.renderUsersAdmin();
+    } catch (err) {
+      H.$('usersAdminList').innerHTML = `<div class="empty-state" style="padding:24px"><p>${H.html(err.message || I18N[State.lang].userLoadError)}</p></div>`;
+    }
+  },
+
+  closeUsersAdmin() {
+    H.$('usersModal').classList.remove('active');
+  },
+
+  handleUsersModalBgClick(e) {
+    if (e.target.id === 'usersModal') this.closeUsersAdmin();
+  },
+
+  renderUsersAdmin() {
+    this.renderUsersAdminList();
+    this.renderUsersAdminForm();
+  },
+
+  renderUsersAdminList() {
+    const users = State.usersAdmin.users;
+    H.$('usersAdminList').innerHTML = users.map((user, index) => `
+      <button class="users-admin-item ${index === State.usersAdmin.selected ? 'active' : ''}" onclick="App.selectUserAdmin(${index})">
+        <div class="users-admin-item-name">${H.html(user.given_name || user.username)}</div>
+        <div class="users-admin-item-meta">${H.html(user.username)} · ${H.html(user.email || 'no email')} · ${H.html(user.role || 'viewer')} · ${user.active ? 'active' : 'inactive'}</div>
+      </button>
+    `).join('') || `<div class="empty-state" style="padding:24px"><p>${I18N[State.lang].empty}</p></div>`;
+  },
+
+  selectUserAdmin(index) {
+    State.usersAdmin.selected = index;
+    State.usersAdmin.message = '';
+    this.renderUsersAdmin();
+  },
+
+  renderUsersAdminForm() {
+    const t = I18N[State.lang];
+    const user = State.usersAdmin.users[State.usersAdmin.selected];
+    if (!user) {
+      H.$('usersAdminForm').innerHTML = `<div class="empty-state"><p>${t.empty}</p></div>`;
+      return;
+    }
+
+    const categories = this.categoryOptions();
+    const selectedCategories = this.normalizeAllowedCategories(user.allowed_categories);
+    const allCategories = this.hasAllCategoryAccess(selectedCategories);
+    const yearParts = this.parseYearAccessText(user.allowed_years);
+
+    H.$('usersAdminForm').innerHTML = `
+      <div class="users-form-grid">
+        ${this.usersField('editUsername', t.usernameLabel, user.username)}
+        ${this.usersField('editGivenName', t.givenNameLabel, user.given_name || '')}
+        ${this.usersField('editEmail', t.emailLabel, user.email || '', 'email')}
+        ${this.usersField('editPassword', t.passwordLabel, user.password || '','text')}
+        <div class="users-field">
+          <label for="editRole">${t.roleLabel}</label>
+          <select id="editRole">
+            <option value="viewer" ${user.role === 'viewer' ? 'selected' : ''}>viewer</option>
+            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>admin</option>
+          </select>
+        </div>
+      </div>
+      <label class="users-check"><input id="editActive" type="checkbox" ${user.active ? 'checked' : ''}> ${t.activeLabel}</label>
+      <div class="users-field">
+        <label>${t.allowedCategoriesLabel}</label>
+        <label class="users-check" style="margin-bottom:8px"><input id="editAllCategories" type="checkbox" ${allCategories ? 'checked' : ''} onchange="App.toggleAllCategoryChecks(this.checked)"> ${t.allCategoriesChoice}</label>
+        <div class="users-categories">
+          ${categories.map(cat => {
+            const value = cat.value;
+            const checked = allCategories || selectedCategories.some(selected => this.categoryKey(selected) === this.categoryKey(value));
+            return `<label class="users-check"><input type="checkbox" class="edit-category-check" value="${H.html(value)}" ${checked ? 'checked' : ''} ${allCategories ? 'disabled' : ''}> ${H.html(cat.label)}</label>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="users-field">
+        <label>${t.allowedYearsLabel}</label>
+        <label class="users-check" style="margin-bottom:8px"><input id="editAllYears" type="checkbox" ${yearParts.all ? 'checked' : ''} onchange="App.toggleYearInputs(this.checked)"> ${t.allYearsChoice}</label>
+        <div class="users-form-grid">
+          ${this.usersField('editStartYear', t.startYearLabel, yearParts.start || '', 'number', yearParts.all)}
+          ${this.usersField('editEndYear', t.endYearLabel, yearParts.end || '', 'number', yearParts.all)}
+        </div>
+        <label class="users-check" style="margin-top:8px"><input id="editIncludeNoDate" type="checkbox" ${yearParts.includeNoDate ? 'checked' : ''} ${yearParts.all ? 'disabled' : ''}> ${t.includeNoDateLabel}</label>
+      </div>
+      <div class="users-status" id="usersAdminStatus">${H.html(State.usersAdmin.message || '')}</div>
+      <div class="users-actions">
+        <button class="btn btn-outline" onclick="App.syncDrivePermissions()">${t.syncDriveLabel}</button>
+        <button class="btn btn-primary" onclick="App.saveUserAdmin()">${t.saveUserLabel}</button>
+      </div>
+    `;
+  },
+
+  usersField(id, label, value, type='text', disabled=false) {
+    return `
+      <div class="users-field">
+        <label for="${id}">${label}</label>
+        <input id="${id}" type="${type}" value="${H.html(value)}" ${disabled ? 'disabled' : ''}>
+      </div>
+    `;
+  },
+
+  categoryOptions() {
+    const map = new Map();
+    State.raw.forEach(doc => {
+      const value = doc.category_en || doc.category;
+      const label = State.lang === 'ar' ? doc.category : (doc.category_en || doc.category);
+      if (value && !map.has(value)) map.set(value, label || value);
+    });
+    return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1], State.lang)).map(([value, label]) => ({ value, label }));
+  },
+
+  toggleAllCategoryChecks(checked) {
+    document.querySelectorAll('.edit-category-check').forEach(input => {
+      input.disabled = checked;
+      input.checked = checked || input.checked;
+    });
+  },
+
+  toggleYearInputs(allYears) {
+    ['editStartYear', 'editEndYear', 'editIncludeNoDate'].forEach(id => {
+      const el = H.$(id);
+      if (el) el.disabled = allYears;
+    });
+  },
+
+  parseYearAccessText(value) {
+    const text = String(value || '*').trim().toLowerCase();
+    if (!text || text === '*') return { all: true, includeNoDate: true, start: '', end: '' };
+    const years = [...text.matchAll(/\b(19\d{2}|20\d{2})\b/g)].map(match => Number(match[1])).sort((a, b) => a - b);
+    return {
+      all: false,
+      includeNoDate: /\bno\s*date\b|بدون\s*تاريخ/.test(text),
+      start: years[0] || '',
+      end: years[years.length - 1] || ''
+    };
+  },
+
+  buildAllowedYearsFromForm() {
+    if (H.$('editAllYears')?.checked) return '*';
+    const start = Number.parseInt(H.$('editStartYear')?.value, 10);
+    const end = Number.parseInt(H.$('editEndYear')?.value, 10);
+    const parts = [];
+    if (Number.isFinite(start) && Number.isFinite(end)) parts.push(`${Math.min(start, end)}-${Math.max(start, end)}`);
+    else if (Number.isFinite(start)) parts.push(String(start));
+    else if (Number.isFinite(end)) parts.push(String(end));
+    if (H.$('editIncludeNoDate')?.checked) parts.push('no date');
+    return parts.join(', ') || '*';
+  },
+
+  buildAllowedCategoriesFromForm() {
+    if (H.$('editAllCategories')?.checked) return '*';
+    const values = [...document.querySelectorAll('.edit-category-check:checked')].map(input => input.value);
+    return values.join(', ') || '*';
+  },
+
+  async saveUserAdmin() {
+    const current = State.usersAdmin.users[State.usersAdmin.selected];
+    if (!current) return;
+
+    const user = {
+      original_username: current.original_username || current.username,
+      username: H.$('editUsername').value.trim(),
+      given_name: H.$('editGivenName').value.trim(),
+      email: H.$('editEmail').value.trim(),
+      password: H.$('editPassword').value,
+      role: H.$('editRole').value,
+      active: H.$('editActive').checked,
+      allowed_categories: this.buildAllowedCategoriesFromForm(),
+      allowed_years: this.buildAllowedYearsFromForm()
+    };
+
+    try {
+      const result = await this.postAction({ action: 'updateUser', token: State.user?.token, user });
+      if (!result.ok) throw new Error(result.message || 'Save failed');
+      State.usersAdmin.users[State.usersAdmin.selected] = { ...result.user, original_username: result.user.username, active: result.user.active === true || String(result.user.active).toLowerCase() === 'true' };
+      State.usersAdmin.message = I18N[State.lang].userSaved;
+      this.renderUsersAdmin();
+      await this.syncDrivePermissions(false);
+    } catch (err) {
+      State.usersAdmin.message = err.message || 'Save failed';
+      this.renderUsersAdminForm();
+    }
+  },
+
+  async syncDrivePermissions(renderFirst=true) {
+    if (!this.isAdmin()) return;
+    State.usersAdmin.message = I18N[State.lang].syncDriveWorking;
+    if (renderFirst) this.renderUsersAdminForm();
+
+    try {
+      const result = await this.postAction({ action: 'syncDrivePermissions', token: State.user?.token });
+      if (!result.ok) throw new Error(result.message || 'Drive sync failed');
+      const details = ` (${result.queued || 0} queued / ${result.folders_planned || 0} folders / ${result.files_planned || 0} files)`;
+      State.usersAdmin.message = `${I18N[State.lang].syncDriveDone}${details}`;
+      this.renderUsersAdminForm();
+    } catch (err) {
+      State.usersAdmin.message = err.message || 'Drive sync failed';
+      this.renderUsersAdminForm();
+    }
+  },
+
+  boot() {
+    this.populateYearDropdown();
+    this.applyLang();
+    this.renderUserMenus();
+    this.renderAdminControls();
+    this.renderAiControls();
+    this.runFilters();
+    this.showPage('dashboard');
+  },
+
+  // ── PAGE NAVIGATION ──────────────────────────────────────
+  showPage(name) {
+    // Hide login
+    H.$('page-login').classList.toggle('hidden', name !== 'login');
+
+    // Show/hide main pages
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    if (name !== 'login') {
+      H.$('page-' + name).classList.add('active');
+      // Always scroll to top of the new page
+      window.scrollTo(0, 0);
+    }
+    State.view = name;
+  },
+
+  goToDashboard() {
+    State.catPage = { cat:null, q:'' };
+    this.closeModal();
+    this.showPage('dashboard');
+  },
+
+  openCategory(cat) {
+    State.catPage = { cat, q:'' };
+    H.$('catSearch').value = '';
+    this.showPage('category');
+    this.renderCatPage();
+  },
+
+  handleCatSearch(v) {
+    State.catPage.q = v.toLowerCase();
+    this.renderCatPage();
+  },
+
+  normalizeDoc(doc) {
+    return {
+      name: String(doc.name || doc.name_ar || '').trim(),
+      name_en: String(doc.name_en || doc.file_name || '').trim(),
+      path: this.normalizePath(doc.path || doc.file_path || ''),
+      category: String(doc.category || doc.category_ar || '').trim(),
+      category_en: String(doc.category_en || '').trim(),
+      pages: Math.max(0, Number.parseInt(doc.pages, 10) || 0),
+      years: Array.isArray(doc.years) ? doc.years.map(Number).filter(Number.isFinite) : this.parseYears(doc.years)
+    };
+  },
+
+  normalizePath(value) {
+    const path = String(value || '').trim();
+    if (!path || /^https?:\/\//i.test(path) || path.startsWith('\\') || path.startsWith('/')) return path;
+    return `\\${path}`;
+  },
+
+  normalizeAllowedCategories(value) {
+    if (Array.isArray(value)) return value.map(v => String(v).trim()).filter(Boolean);
+    const text = String(value || '').trim();
+    if (!text) return ['*'];
+    return text.split(/[,،;|]/).map(v => v.trim()).filter(Boolean);
+  },
+
+  hasAllCategoryAccess(categories) {
+    return !categories.length || categories.includes('*');
+  },
+
+  normalizeYearAccess(value) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return {
+        all: value.all === true,
+        includeNoDate: value.includeNoDate === true || value.include_no_date === true || value.all === true,
+        years: Array.isArray(value.years) ? value.years.map(Number).filter(Number.isFinite) : []
+      };
+    }
+
+    const text = String(value || '').trim().toLowerCase();
+    if (!text || text === '*') return { all: true, includeNoDate: true, years: [] };
+
+    const years = new Set();
+    const includeNoDate = /\bno\s*date\b|بدون\s*تاريخ/.test(text);
+
+    for (const match of text.matchAll(/(19\d{2}|20\d{2})\s*[-_]\s*(19\d{2}|20\d{2})/g)) {
+      const start = Number(match[1]);
+      const end = Number(match[2]);
+      for (let y = Math.min(start, end); y <= Math.max(start, end); y++) years.add(y);
+    }
+
+    for (const match of text.matchAll(/\b(19\d{2}|20\d{2})\b/g)) {
+      years.add(Number(match[1]));
+    }
+
+    return { all: false, includeNoDate, years: [...years].sort((a, b) => a - b) };
+  },
+
+  yearAccessText(access) {
+    const t = I18N[State.lang];
+    if (access.all) return t.allYears;
+
+    const parts = [];
+    if (access.years.length) {
+      const years = access.years;
+      if (years.length > 8) parts.push(`${years[0]}-${years[years.length - 1]}`);
+      else parts.push(years.join(', '));
+    }
+    if (access.includeNoDate) parts.push(t.noDate);
+    return parts.join(', ') || t.allYears;
+  },
+
+  categoryKey(value) {
+    return String(value || '').trim().toLowerCase();
+  },
+
+  canViewDoc(doc) {
+    const categories = this.normalizeAllowedCategories(State.user?.allowedCategories || State.user?.allowed_categories);
+    const categoryAllowed = this.hasAllCategoryAccess(categories) || (() => {
+      const allowed = new Set(categories.map(cat => this.categoryKey(cat)));
+      return allowed.has(this.categoryKey(doc.category)) || allowed.has(this.categoryKey(doc.category_en));
+    })();
+
+    if (!categoryAllowed) return false;
+
+    const yearAccess = this.normalizeYearAccess(State.user?.allowedYears || State.user?.allowed_years);
+    if (yearAccess.all) return true;
+    if (!(doc.years || []).length) return yearAccess.includeNoDate;
+
+    const allowedYears = new Set(yearAccess.years);
+    return (doc.years || []).some(year => allowedYears.has(Number(year)));
+  },
+
+  accessibleData() {
+    return State.raw.filter(doc => this.canViewDoc(doc));
+  },
+
+  parseYears(value) {
+    const text = String(value || '');
+    const years = new Set();
+
+    for (const match of text.matchAll(/(19\d{2}|20\d{2})\s*[-_]\s*(19\d{2}|20\d{2})/g)) {
+      const start = Number(match[1]);
+      const end = Number(match[2]);
+      for (let y = Math.min(start, end); y <= Math.max(start, end); y++) years.add(y);
+    }
+
+    for (const match of text.matchAll(/\b(19\d{2}|20\d{2})\b/g)) {
+      years.add(Number(match[1]));
+    }
+
+    return [...years].sort((a, b) => a - b);
+  },
+
+  // ── THEME & LANG ─────────────────────────────────────────
+  toggleTheme() {
+    State.theme = State.theme==='light' ? 'dark' : 'light';
+    localStorage.setItem('lyha_dark', State.theme==='dark'?'1':'0');
+    this.applyTheme();
+  },
+  applyTheme() {
+    document.documentElement.setAttribute('data-theme', State.theme);
+  },
+
+  toggleLang() {
+    State.lang = State.lang==='ar' ? 'en' : 'ar';
+    const isAr = State.lang==='ar';
+    document.documentElement.setAttribute('lang',  State.lang);
+    document.documentElement.setAttribute('dir',   isAr?'rtl':'ltr');
+    H.txt('langToggleBtn', isAr?'EN':'AR');
+    H.txt('catLangBtn',    isAr?'EN':'AR');
+    this.applyLang();
+    this.renderUserMenus();
+    this.renderAiControls();
+    this.runFilters();
+    if (State.view==='category') this.renderCatPage();
+  },
+
+  applyLang() {
+    const t = I18N[State.lang];
+    H.txt('t-login-badge', t.loginBadge);   H.txt('t-login-title', t.loginTitle);
+    H.txt('t-login-sub',   t.loginSub);     H.txt('t-login-btn',   t.loginBtn);
+    H.txt('t-label-user',  t.labelUser);    H.txt('t-label-pass',  t.labelPass);
+    H.txt('loginFooter', t.loginFooter || 'بواسطة مجاب عبيد · جميع الحقوق محفوظة · جمعية بيوت الشباب الليبية - 2026');
+    H.txt('loadingTitle',  t.loadingTitle); H.txt('loadingSubtitle', t.loadingSubtitle);
+    H.txt('t-header-title',t.headerTitle);  H.txt('t-header-sub',  t.headerSub);
+    H.txt('usersModalTitle', t.usersAdminTitle);
+    H.txt('t-chart-cat',   t.chartCat);     H.txt('t-chart-year',  t.chartYear);
+    H.txt('t-cat-title',   t.catTitle);     H.txt('t-chips-label', t.chipsLabel);
+    H.txt('t-modal-open',  t.open);
+    H.plh('searchInput',   t.search);       H.plh('catSearch',     t.searchCat);
+    H.txt('optNA', t.optNA); H.txt('optND', t.optND);
+    H.txt('optPD', t.optPD); H.txt('optPA', t.optPA);
+    const ySel = H.$('yearSelect');
+    if (ySel.options.length > 0) ySel.options[0].text = t.allYears;
+    this.renderAiControls();
+  },
+
+  // ── FILTERS ──────────────────────────────────────────────
+  handleSearch(v) { State.filters.q   = v.toLowerCase(); this.runFilters(); },
+  handleSort(v)   { State.filters.sort = v;              this.runFilters(); },
+  handleYear(v)   { State.filters.year = v;              this.runFilters(); },
+  handleCategory(cat) { State.filters.cat = cat;         this.runFilters(); },
+
+  runFilters() {
+    const { q, sort, year, cat } = State.filters;
+    State.filtered = this.accessibleData().filter(item => {
+      if (cat && item.category !== cat) return false;
+      if (year === 'no-date' && (item.years || []).length) return false;
+      if (year !== 'all' && year !== 'no-date' && !(item.years||[]).includes(Number(year))) return false;
+      if (q) {
+        const s = [item.name,item.name_en,item.category,item.category_en,...(item.years||[])].join(' ').toLowerCase();
+        if (!s.includes(q)) return false;
+      }
+      return true;
+    });
+    State.filtered.sort((a,b) => {
+      const nA=H.getDocName(a), nB=H.getDocName(b);
+      switch(sort) {
+        case 'name-asc':   return nA.localeCompare(nB, State.lang);
+        case 'name-desc':  return nB.localeCompare(nA, State.lang);
+        case 'pages-asc':  return (a.pages||0)-(b.pages||0);
+        case 'pages-desc': return (b.pages||0)-(a.pages||0);
         default: return 0;
       }
     });
+    this.render();
+  },
 
-    renderAll();
-  }
+  populateYearDropdown() {
+    const years = new Set();
+    const data = this.accessibleData();
+    const hasNoDate = data.some(i => !(i.years || []).length);
+    data.forEach(i=>(i.years||[]).forEach(y=>years.add(y)));
+    const sorted = [...years].sort((a,b)=>b-a);
+    H.$('yearSelect').innerHTML =
+      `<option value="all">${I18N[State.lang].allYears}</option>` +
+      (hasNoDate ? `<option value="no-date">${I18N[State.lang].noDate}</option>` : '') +
+      sorted.map(y=>`<option value="${y}">${y}</option>`).join('');
+  },
 
-  function getAvgYear(item) {
-    if (!Array.isArray(item.years) || item.years.length === 0) return 0;
-    return item.years.reduce((a, b) => a + b, 0) / item.years.length;
-  }
+  // ── PDF PREVIEW ──────────────────────────────────────────
+  convertDrive(url) {
+    const m = url.match(/\/file\/d\/([^/?]+)/);
+    return m ? `https://drive.google.com/file/d/${m[1]}/preview` : url;
+  },
 
-  function renderAll() {
-    renderStats();
-    renderCharts();
-    renderCategories();
-  }
+  // Index-based doc openers — path never touches HTML attributes
+  openPreviewByIndex(idx) {
+    const doc = App._catDocs[idx];
+    if (!doc || !doc.path) return;
+    const name = H.getDocName(doc);
+    H.txt('modalTitle', name);
+    H.$('modalFrame').src = this.convertDrive(doc.path);
+    H.$('modalExtLink').href = doc.path;
+    H.$('pdfModal').classList.add('active');
+  },
 
-  function renderStats() {
-    const totalDocs = filteredData.length;
-    const totalPages = filteredData.reduce((sum, i) => sum + (i.pages || 0), 0);
-    const avgPages = totalDocs ? Math.round(totalPages / totalDocs) : 0;
-    const cats = Object.keys(getGroupedCategories()).length;
+  openDirectByIndex(idx) {
+    const doc = App._catDocs[idx];
+    if (!doc || !doc.path) return;
+    window.open(doc.path, '_blank', 'noopener');
+  },
 
-    document.getElementById('totalDocs').textContent = totalDocs;
-    document.getElementById('totalPages').textContent = totalPages.toLocaleString();
-    document.getElementById('avgPages').textContent = avgPages;
-    document.getElementById('totalCats').textContent = cats;
-  }
+  openPreview(path, name) {
+    if (!path) return;
+    H.txt('modalTitle', name);
+    H.$('modalFrame').src = this.convertDrive(path);
+    H.$('modalExtLink').href = path;
+    H.$('pdfModal').classList.add('active');
+  },
 
-  function getGroupedCategories() {
-    const grouped = {};
-    filteredData.forEach(item => {
-      if (!grouped[item.category]) grouped[item.category] = [];
-      grouped[item.category].push(item);
-    });
-    return grouped;
-  }
+  closeModal() {
+    H.$('pdfModal').classList.remove('active');
+    setTimeout(()=>{ H.$('modalFrame').src=''; }, 250);
+  },
 
-  function renderCharts() {
-    const t = translations[currentLang];
-    // ===== Category Chart =====
-    const catCounts = {};
-    filteredData.forEach(i => catCounts[i.category] = (catCounts[i.category] || 0) + 1);
-    const catLabels = Object.keys(catCounts).sort((a,b) => catCounts[b] - catCounts[a]);
-    const catMax = Math.max(...catLabels.map(l => catCounts[l]), 1);
+  handleModalBgClick(e) {
+    if (e.target.id==='pdfModal') this.closeModal();
+  },
 
-    let catSvg = '';
-    const barH = 23, gap = 8, startY = 5;
-    const chartWidth = 400;
-    const labelWidth = 160;
-    const barMaxWidth = chartWidth - labelWidth - 20;
-    const colors = ['#3b82f6', '#f97316', '#10b981', '#8b5cf6', '#0ea5e9', '#ef4444', '#14b8a6', '#ec4899'];
-    catLabels.forEach((cat, idx) => {
-      const y = startY + idx * (barH + gap);
-      const w = (catCounts[cat] / catMax) * barMaxWidth;
-      const isRTL = document.documentElement.dir === 'rtl';
-      const labelX = isRTL ? chartWidth - labelWidth + 120 : labelWidth - 20;
-      const barX = isRTL ? chartWidth - labelWidth - w : labelWidth;
-      const countX = isRTL ? (chartWidth - labelWidth - 16) : (labelWidth + 6);
-      const textAnchor = isRTL ? "start" : "end";
-      catSvg += `<text x="${labelX}" y="${y + 16}" text-anchor="${textAnchor}" font-size="11" fill="#64748b">${cat}</text>`;
-      catSvg += `<rect x="${barX}" y="${y}" width="${Math.max(w, 4)}" height="${barH}" rx="4" fill="${colors[idx % colors.length]}" />`;
-      catSvg += `<text x="${countX}" y="${y + 16}" text-anchor="${isRTL ? 'end' : 'start'}" font-size="11" font-weight="600" fill="#0f172a">${catCounts[cat]}</text>`;
-    });
-    document.getElementById('catChart').innerHTML = catSvg;
+  // ── RENDERERS ────────────────────────────────────────────
+  render() {
+    this.renderStats();
+    this.renderChips();
+    this.renderCategoryGrid();
+    this.renderBarChart();
+    this.renderLineChart();
+  },
 
-    // ===== Year Chart =====
-    const yearCounts = {};
-    filteredData.forEach(item => {
-      if (Array.isArray(item.years)) {
-        item.years.forEach(year => {
-          yearCounts[year] = (yearCounts[year] || 0) + 1;
-        });
-      }
-    });
-    const maxBars = 10;
-    const yearEntries = Object.entries(yearCounts).sort((a, b) => b[1] - a[1]).slice(0, maxBars);
-    
-    if (yearEntries.length === 0) {
-      document.getElementById('yearChart').innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="#64748b" font-size="14">${t.noYearData}</text>`;
-      return;
-    }
-    const yearMax = Math.max(...yearEntries.map(e => e[1]));
-    const chartHeight = 220;
-    const barWidth = 32;
-    const barGap = 16;
-    const startX = 20;
-    const baselineY = chartHeight - 28;
-    let yearSvg = '';
-    
-    yearEntries.forEach(([yr, count], idx) => {
-      const barHeight = Math.max((count / yearMax) * (chartHeight - 60), 4);
-      const x = startX + idx * (barWidth + barGap);
-      const y = baselineY - barHeight;
-      yearSvg += `<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" fill="#3b82f6" />`;
-      if (barHeight > 22) {
-        yearSvg += `<text x="${x + barWidth/2}" y="${y + barHeight/2 + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="white">${count}</text>`;
-      } else {
-        yearSvg += `<text x="${x + barWidth/2}" y="${y - 6}" text-anchor="middle" font-size="10" font-weight="700" fill="#0f172a">${count}</text>`;
-      }
-      yearSvg += `<text x="${x + barWidth/2}" y="${baselineY + 14}" text-anchor="middle" font-size="11" fill="#64748b">${yr}</text>`;
-    });
-    document.getElementById('yearChart').innerHTML = yearSvg;
-  }
+  renderStats() {
+    const t = I18N[State.lang];
+    const total  = State.filtered.length;
+    const pages  = State.filtered.reduce((s,i)=>s+(i.pages||0),0);
+    const avg    = total ? Math.round(pages/total) : 0;
+    const catCnt = new Set(State.filtered.map(i=>i.category)).size;
 
-  function renderCategories() {
-    const t = translations[currentLang];
-    const container = document.getElementById('categoriesContainer');
-    if (filteredData.length === 0) {
-      container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><p>${t.noMatch}</p></div>`;
-      return;
-    }
-    const grouped = getGroupedCategories();
-    let html = '';
-    Object.keys(grouped).sort().forEach((cat, idx) => {
-      const items = grouped[cat];
-      const totalPages = items.reduce((sum, i) => sum + (i.pages || 0), 0);
-      const clr = getCategoryColor(cat);
-      const displayName = currentLang === 'ar' ? cat : (items[0]?.category_en || cat);
-      html += `
-        <div class="cat-card" onclick="openFullPage('${cat.replace(/'/g, "\\'")}')" style="animation-delay: ${idx * 0.05}s">
-          <div class="cat-card-icon" style="background: ${clr.bg}; color: ${clr.color};">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
-          <div class="cat-card-name">${displayName}</div>
-          <div class="cat-card-stats">
-            <span class="cat-card-count">${items.length} ${t.documents}</span>
-            <span>•</span>
-            <span>${t.pagesTotal(totalPages)}</span>
-          </div>
-          <svg class="cat-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    // SVG icons for stats
+    const icons = [
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
+    ];
+    const cards = [
+      { icon:icons[0], label:t.totalDocs,  val:total,  bg:'var(--blue-soft)',   color:'var(--blue)'   },
+      { icon:icons[1], label:t.totalPages, val:pages,  bg:'var(--orange-soft)', color:'var(--orange)' },
+      { icon:icons[2], label:t.avgPages,   val:avg,    bg:'var(--green-soft)',  color:'var(--green)'  },
+      { icon:icons[3], label:t.cats,       val:catCnt, bg:'var(--navy-glow)',   color:'var(--navy)'   },
+    ];
+    H.$('statsGrid').innerHTML = cards.map(c=>`
+      <div class="stat-card">
+        <div class="stat-icon-wrap" style="background:${c.bg};color:${c.color}">${c.icon}</div>
+        <div class="stat-info">
+          <span>${c.label}</span>
+          <strong>${c.val.toLocaleString('en-US')}</strong>
         </div>
-      `;
-    });
-    container.innerHTML = html;
-  }
+      </div>`).join('');
+  },
 
-  function renderFullPageList() {
-    if (!fpCategory) return;
-    const t = translations[currentLang];
-    const items = filteredData.filter(i => i.category === fpCategory).filter(item => {
-      if (!state.fpSearch) return true;
-      const searchable = `${item.name} ${item.name_en || ''} ${item.keywords || ''} ${(item.years||[]).join(' ')}`.toLowerCase();
-      return searchable.includes(state.fpSearch);
+  renderChips() {
+    const t = I18N[State.lang];
+    const cats = [...new Set(this.accessibleData().map(i=>i.category))].sort();
+    let html = `<button class="chip ${!State.filters.cat?'active':''}" onclick="App.handleCategory(null)">${t.all}</button>`;
+    cats.forEach(cat => {
+      html += `<button class="chip ${State.filters.cat===cat?'active':''}" onclick="App.handleCategory('${H.esc(cat)}')">${H.getCatName(cat)}</button>`;
     });
-    const container = document.getElementById('fpListContainer');
-    if (items.length === 0) {
-      container.innerHTML = `<div class="empty-state">${t.noDocs}</div>`;
+    H.$('chipsContainer').innerHTML = html;
+  },
+
+  renderCategoryGrid() {
+    const t = I18N[State.lang];
+    const groups = {};
+    State.filtered.forEach(i => {
+      if (!groups[i.category]) groups[i.category]=[];
+      groups[i.category].push(i);
+    });
+    const keys = Object.keys(groups).sort();
+    H.txt('catCountDisplay', `${keys.length} ${t.cats}`);
+    if (!keys.length) {
+      H.$('categoriesGrid').innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <p>${t.empty}</p>
+        </div>`;
       return;
     }
-    container.innerHTML = items.map(file => {
-      const displayName = currentLang === 'ar' ? (file.name || '') : (file.name_en || file.name || '');
+
+    // All category cards use the same folder icon — color comes from CSS nth-child
+    const folderSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+
+    H.$('categoriesGrid').innerHTML = keys.map((cat, idx) => {
+      const items = groups[cat];
+      const totalPg = items.reduce((s,i)=>s+(i.pages||0), 0);
+      const name = H.getCatName(cat);
+      const icon = folderSvg;
       return `
-        <div class="list-row">
-          <div class="list-info">
-            <div class="list-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="cat-card" onclick="App.openCategory('${H.esc(cat)}')">
+          <div class="cat-card-icon">${icon}</div>
+          <div class="cat-card-title">${name}</div>
+          <div class="cat-card-footer">
+            <div class="cat-badge">
+              <span class="cat-badge-dot"></span>
+              ${items.length} ${t.docsCount}
             </div>
-            <div class="list-details">
-              <div class="list-name" title="${displayName}">${displayName}</div>
-              <div class="list-meta">${t.pagesLabel(file.pages || 0)}${Array.isArray(file.years) ? ' • ' + file.years.join(', ') : ''}</div>
-            </div>
+            <div class="cat-badge">•</div>
+            <div class="cat-badge">${totalPg} ${t.pages}</div>
           </div>
-          <div class="list-actions">
-            <button class="btn-sm" onclick="event.stopPropagation(); openPreview('${(file.path || '').replace(/'/g, "\\'")}', '${displayName.replace(/'/g, "\\'")}')">${t.previewBtn}</button>
-            <button class="btn-sm btn-primary-sm" onclick="event.stopPropagation(); window.open('${(file.path || '').replace(/'/g, "\\'")}', '_blank')">${t.openBtn}</button>
-          </div>
-        </div>
-      `;
+        </div>`;
     }).join('');
-  }
+  },
 
-  window.openFullPage = (cat) => {
-    const t = translations[currentLang];
-    fpCategory = cat;
-    state.fpSearch = '';
-    document.getElementById('fpSearchInput').value = '';
-    const items = filteredData.filter(i => i.category === cat);
-    const displayName = currentLang === 'ar' ? cat : (items[0]?.category_en || cat);
-    document.getElementById('fpTitleName').textContent = displayName;
-    document.getElementById('fpBadge').textContent = `${items.length} ${t.documents}`;
+  // ── BAR CHART ───────────────────────────────────────────
+  renderBarChart() {
+    const t = I18N[State.lang];
+    const counts = {};
+    State.filtered.forEach(i => counts[i.category]=(counts[i.category]||0)+1);
+    const sorted = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]).slice(0,6);
+    const el = H.$('chartCategories');
+    if (!sorted.length) {
+      el.innerHTML = `<div class="empty-state" style="padding:20px"><p>${t.empty}</p></div>`;
+      return;
+    }
+    const maxVal = Math.max(...sorted.map(c=>counts[c]), 1);
+    el.innerHTML = sorted.map((cat,i) => {
+      const val   = counts[cat];
+      const pct   = Math.max(Math.round((val/maxVal)*100), 8);
+      const name  = H.getCatName(cat);
+      const label = name.length>14 ? name.slice(0,13)+'…' : name;
+      const color = BAR_COLORS[i % BAR_COLORS.length];
+      return `
+        <div class="bar-row">
+          <div class="bar-label" title="${name}">${label}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${pct}%;background:${color}">${val}</div>
+          </div>
+        </div>`;
+    }).join('');
+  },
 
-    // Save scroll position of main page
-    scrollPos = window.pageYOffset || document.documentElement.scrollTop;
-    
-    // Lock body scroll
-    document.body.classList.add('scroll-locked');
-    document.body.style.top = `-${scrollPos}px`;
-    
-    renderFullPageList();
-    
-    // Small delay then show overlay to ensure scroll lock is applied
-    requestAnimationFrame(() => {
-      document.getElementById('fullpageOverlay').classList.add('active');
+  // ── LINE CHART ──────────────────────────────────────────
+  renderLineChart() {
+    const t = I18N[State.lang];
+    const counts = {};
+    State.filtered.forEach(i=>(i.years||[]).forEach(y=>counts[y]=(counts[y]||0)+1));
+    const years = Object.keys(counts).sort((a,b)=>a-b);
+    const el = H.$('chartYears');
+    if (!years.length) {
+      el.innerHTML = `<div class="empty-state" style="padding:20px"><p>${t.empty}</p></div>`;
+      return;
+    }
+    const W=460, HS=160, PL=30, PR=16, PT=18, PB=28;
+    const maxVal = Math.max(...Object.values(counts), 1);
+    const plotW=W-PL-PR, plotH=HS-PT-PB;
+    const pts = years.map((y,i)=>({
+      cx: PL+(years.length===1?plotW/2:i/(years.length-1)*plotW),
+      cy: PT+plotH-(counts[y]/maxVal)*plotH,
+      y, v:counts[y]
+    }));
+    let linePath='', areaPath='';
+    if (pts.length===1) {
+      linePath=`M ${pts[0].cx} ${pts[0].cy}`;
+      areaPath=`M ${pts[0].cx} ${PT+plotH} L ${pts[0].cx} ${pts[0].cy} Z`;
+    } else {
+      function cp(p0,p1,p2,p3,t){return{x:p1.cx+(p2.cx-p0.cx)*t/6,y:p1.cy+(p2.cy-p0.cy)*t/6};}
+      let d=`M ${pts[0].cx} ${pts[0].cy}`;
+      for(let i=0;i<pts.length-1;i++){
+        const p0=pts[Math.max(i-1,0)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(i+2,pts.length-1)];
+        const c1=cp(p0,p1,p2,p3,1);
+        const far=pts[Math.min(i+3,pts.length-1)];
+        const c2ref=cp(p1,p2,p3,far,1);
+        const c2={x:p2.cx-(c2ref.x-p2.cx),y:p2.cy-(c2ref.y-p2.cy)};
+        d+=` C ${c1.x},${c1.y} ${c2.x},${c2.y} ${p2.cx},${p2.cy}`;
+      }
+      linePath=d; areaPath=`${d} L ${pts[pts.length-1].cx},${PT+plotH} L ${pts[0].cx},${PT+plotH} Z`;
+    }
+    const gridLines=[0,.25,.5,.75,1].map(r=>{
+      const gy=PT+plotH-r*plotH, gv=Math.round(r*maxVal);
+      return `<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,4"/>
+              <text x="${PL-4}" y="${gy+4}" text-anchor="end" font-size="9" fill="var(--text-muted)">${gv}</text>`;
+    }).join('');
+    const step=Math.ceil(pts.length/6);
+    const xLabels=pts.filter((_,i)=>i%step===0||i===pts.length-1).map(p=>
+      `<text x="${p.cx}" y="${HS-6}" text-anchor="middle" font-size="10" fill="var(--text-muted)">${p.y}</text>`).join('');
+    const dots=pts.map(p=>`<circle cx="${p.cx}" cy="${p.cy}" r="4" fill="${AREA_COLOR}" stroke="white" stroke-width="2"><title>${p.y}: ${p.v}</title></circle>`).join('');
+    el.innerHTML=`
+      <svg viewBox="0 0 ${W} ${HS}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${HS}px;overflow:visible">
+        <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="${AREA_COLOR}" stop-opacity=".18"/>
+          <stop offset="100%" stop-color="${AREA_COLOR}" stop-opacity=".01"/>
+        </linearGradient></defs>
+        ${gridLines}
+        <line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+plotH}" stroke="var(--border)" stroke-width="1"/>
+        <line x1="${PL}" y1="${PT+plotH}" x2="${W-PR}" y2="${PT+plotH}" stroke="var(--border)" stroke-width="1"/>
+        <path d="${areaPath}" fill="url(#ag)"/>
+        <path d="${linePath}" fill="none" stroke="${AREA_COLOR}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        ${dots}${xLabels}
+      </svg>`;
+  },
+
+  // ── CATEGORY PAGE RENDERER ──────────────────────────────
+  renderCatPage() {
+    const { cat, q } = State.catPage;
+    const t = I18N[State.lang];
+
+    // Update header
+    const catName = H.getCatName(cat);
+    H.txt('catPageTitle', catName);
+
+    const docs = State.filtered.filter(i => {
+      if (i.category !== cat) return false;
+      if (q) {
+        const s = [i.name,i.name_en,...(i.years||[])].join(' ').toLowerCase();
+        return s.includes(q);
+      }
+      return true;
     });
-  };
 
-  window.closeFullPage = () => {
-    document.getElementById('fullpageOverlay').classList.remove('active');
-    fpCategory = null;
-    
-    // Unlock body scroll and restore position
-    setTimeout(() => {
-      document.body.classList.remove('scroll-locked');
-      document.body.style.top = '';
-      window.scrollTo(0, scrollPos);
-    }, 300);
-  };
+    H.txt('catPageSub', `${docs.length} ${t.docsCount}`);
 
-function convertDriveLink(url) {
-  const match = url.match(/\/file\/d\/(.*?)\//);
-  if (match) {
-    return `https://drive.google.com/file/d/${match[1]}/preview`;
-  }
-  return url;
-}
+    const list = H.$('catDocList');
+    if (!docs.length) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <p>${t.empty}</p>
+        </div>`;
+      return;
+    }
 
-window.openPreview = (path, name) => {
-  if (!path) return;
-  document.getElementById('modalTitle').textContent = name;
-  const previewURL = convertDriveLink(path);
-  document.getElementById('modalFrame').src = previewURL;
-  document.getElementById('pdfModal').classList.add('active');
+    // Store docs on the App so onclick handlers can access them safely by index
+    // (avoids putting raw file paths inside HTML attributes which can corrupt them)
+    App._catDocs = docs;
+
+    list.innerHTML = docs.map((doc, idx) => {
+      const name  = H.getDocName(doc);
+      const years = (doc.years||[]).length ? (doc.years||[]).join('، ') : t.noDate;
+      const has   = !!doc.path;
+
+      return `
+        <div class="doc-row">
+          <div class="doc-file-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <div class="doc-info">
+            <div class="doc-title" title="${name}">${name}</div>
+            <div class="doc-meta">
+              <span class="doc-meta-tag">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                ${years}
+              </span>
+              <span class="doc-meta-tag">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                ${doc.pages||0} ${t.pages}
+              </span>
+            </div>
+          </div>
+          <div class="btn-group">
+            ${has ? `
+              <button class="btn btn-outline" onclick="event.stopPropagation();App.openPreviewByIndex(${idx})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                ${t.preview}
+              </button>
+              <button class="btn btn-primary" onclick="event.stopPropagation();App.openDirectByIndex(${idx})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                ${t.open}
+              </button>` : `
+              <span class="doc-meta-tag" style="color:var(--text-muted)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                غير متاح
+              </span>`}
+          </div>
+        </div>`;
+    }).join('');
+  },
 };
 
-  window.closeModal = () => {
-    document.getElementById('pdfModal').classList.remove('active');
-    setTimeout(() => document.getElementById('modalFrame').src = '', 200);
-  };
-  document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('loginSubmitBtn');
+// ── INIT ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  App.init();
 
-  if (btn) {
-    btn.addEventListener('click', handleLogin);
-    btn.addEventListener('touchstart', handleLogin); // mobile fix
+  // Enter on password → login
+  H.$('password').addEventListener('keydown', e => {
+    if (e.key==='Enter') App.login();
+  });
+
+  // Escape → close modal
+  document.addEventListener('keydown', e => {
+    if (e.key==='Escape') {
+      App.closeModal();
+      App.closeUserMenus();
+      App.closeAiMenus();
+      App.closeUsersAdmin();
+    }
+  });
+
+  document.addEventListener('click', () => {
+    App.closeUserMenus();
+    App.closeAiMenus();
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./lyha-sw.js').catch(() => {});
   }
-
-  console.log("Login button bound");
 });
 </script>
 </body>
 </html>
-
