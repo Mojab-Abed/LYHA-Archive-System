@@ -995,23 +995,7 @@
    Mobile scroll fix: category view is a full page, not an overlay
 ══════════════════════════════════════════════════════════════ */
 
-// ── FALLBACK DATA ──────────────────────────────────────────────
-const FALLBACK_DATA = [
-  { name:"الاتحاد الأفريقي",       name_en:"African Union",           category:"المنظمات",    category_en:"Organizations",  years:[2005,2006], pages:88,  path:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-  { name:"تقرير مالي 2010",         name_en:"Financial Report 2010",   category:"التقارير",    category_en:"Reports",        years:[2010],      pages:45,  path:"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-  { name:"تقرير نشاط 2012",         name_en:"Activity Report 2012",    category:"التقارير",    category_en:"Reports",        years:[2012],      pages:52 },
-  { name:"تقرير نشاط 2015",         name_en:"Activity Report 2015",    category:"التقارير",    category_en:"Reports",        years:[2015],      pages:60 },
-  { name:"مراسلة وزارة الشباب",      name_en:"Ministry of Youth Corr.",category:"المراسلات",   category_en:"Correspondence", years:[2008],      pages:5  },
-  { name:"مراسلة وزارة السياحة",     name_en:"Tourism Ministry Corr.", category:"المراسلات",   category_en:"Correspondence", years:[2009],      pages:4  },
-  { name:"عقد صيانة",               name_en:"Maintenance Contract",    category:"العقود",      category_en:"Contracts",      years:[2015],      pages:12 },
-  { name:"عقد خدمات",               name_en:"Services Contract",       category:"العقود",      category_en:"Contracts",      years:[2016],      pages:14 },
-  { name:"محضر اجتماع 2011",         name_en:"Meeting Minutes 2011",    category:"المحاضر",     category_en:"Minutes",        years:[2011],      pages:8  },
-  { name:"محضر اجتماع 2013",         name_en:"Meeting Minutes 2013",    category:"المحاضر",     category_en:"Minutes",        years:[2013],      pages:9  },
-  { name:"اتفاقية تعاون دولي",       name_en:"International Agreement", category:"الاتفاقيات",  category_en:"Agreements",     years:[2007,2008], pages:22 },
-  { name:"قرار إداري 2014",          name_en:"Admin Decision 2014",     category:"القرارات",    category_en:"Decisions",      years:[2014],      pages:3  },
-];
-
-const SHEET_JSON_URL = 'https://script.google.com/macros/s/AKfycbxK4JmWPuBuXXSho9DbAMh7FN_THwe6hOqKsuYcg8L5BJhDhZcsRTKfcIPIVoiXmdponA/exec';
+const SHEET_JSON_URL = 'https://script.google.com/macros/s/AKfycbxIBuynf66UpvdnP01rHkkJwTCIXvqDWjm4uHawEIOUZi4SsnU2FhC3uNSgjBfuTKBw/exec';
 const USER_SESSION_KEY = 'lyha_user_session';
 
 // ── I18N ───────────────────────────────────────────────────────
@@ -1107,35 +1091,33 @@ const App = {
 
   async init() {
     this.applyTheme();
-    State.user = this.readStoredUser();
-    const hasSession = !!State.user;
+    const storedUser = this.readStoredUser();
     this.applyLang();
-    State.raw = await this.loadArchiveData();
-    State.aiLinks = await this.loadAiLinks();
+    const results = await Promise.all([
+      this.loadArchiveData(),
+      this.loadAiLinks(),
+      storedUser ? this.validateStoredUser(storedUser) : Promise.resolve(null)
+    ]);
+    State.raw = results[0];
+    State.aiLinks = results[1];
+    State.user = results[2];
     this.showLoading(false);
-    if (hasSession) this.boot();
+    if (State.user) this.boot();
     else this.showPage('login');
   },
 
   async loadArchiveData() {
-    const sources = [
-      `${SHEET_JSON_URL}?action=data&t=${Date.now()}`,
-      './data.json'
-    ];
-
-    for (const url of sources) {
-      try {
-        const r = await fetch(url, { cache: 'no-store' });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
-        if (!Array.isArray(data)) throw new Error('Archive data must be an array');
-        return data.map(doc => this.normalizeDoc(doc));
-      } catch (err) {
-        console.warn('[LYHA] data source failed:', url, err);
-      }
+    const url = `${SHEET_JSON_URL}?action=data&t=${Date.now()}`;
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      if (!Array.isArray(data)) throw new Error('Archive data must be an array');
+      return data.map(doc => this.normalizeDoc(doc));
+    } catch (err) {
+      console.error('[LYHA] Google Sheets archive data failed:', err);
+      return [];
     }
-
-    return FALLBACK_DATA.map(doc => this.normalizeDoc(doc));
   },
 
   async loadAiLinks() {
@@ -1175,7 +1157,7 @@ const App = {
     this.showLoading(true);
     try {
       const result = await this.checkCredentials(u, p);
-      if (!result.ok) {
+      if (!result.ok || !result.token) {
         H.$('loginError').textContent = result.message || I18N[State.lang].errLogin;
         H.$('loginError').style.display = 'block';
         return;
@@ -1185,13 +1167,14 @@ const App = {
         username: result.username || u,
         name: result.name || result.username || u,
         email: result.email || '',
-        role: result.role || 'user',
+        role: result.role || 'viewer',
         token: result.token || '',
         allowedCategories: this.normalizeAllowedCategories(result.allowed_categories || result.allowedCategories),
         allowedYears: this.normalizeYearAccess(result.allowed_years || result.allowedYears)
       };
-      localStorage.setItem(USER_SESSION_KEY, JSON.stringify(State.user));
-      localStorage.setItem('lyha_auth','1');
+      sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(State.user));
+      localStorage.removeItem(USER_SESSION_KEY);
+      localStorage.removeItem('lyha_auth');
       H.$('loginError').style.display = 'none';
       H.$('password').value = '';
       this.showLoading(false);
@@ -1223,19 +1206,44 @@ const App = {
   },
 
   readStoredUser() {
+    localStorage.removeItem('lyha_auth');
+    localStorage.removeItem(USER_SESSION_KEY);
     try {
-      const user = JSON.parse(localStorage.getItem(USER_SESSION_KEY) || 'null');
-      if (user && user.username) return user;
-    } catch {}
-    if (localStorage.getItem('lyha_auth') === '1') {
-      return { username: 'admin', name: 'admin', role: 'admin', token: '', allowedCategories: ['*'], allowedYears: { all: true, includeNoDate: true, years: [] } };
+      const user = JSON.parse(sessionStorage.getItem(USER_SESSION_KEY) || 'null');
+      if (user && user.username && user.token) return user;
+    } catch {
+      sessionStorage.removeItem(USER_SESSION_KEY);
     }
     return null;
   },
 
-  logout() {
+  async validateStoredUser(storedUser) {
+    try {
+      const result = await this.postAction({ action: 'validateSession', token: storedUser.token });
+      if (!result.ok || !result.token) throw new Error(result.message || 'Invalid session');
+      const user = {
+        username: result.username,
+        name: result.name || result.username,
+        email: result.email || '',
+        role: result.role || 'viewer',
+        token: result.token,
+        allowedCategories: this.normalizeAllowedCategories(result.allowed_categories),
+        allowedYears: this.normalizeYearAccess(result.allowed_years)
+      };
+      sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(user));
+      return user;
+    } catch (err) {
+      console.warn('[LYHA] stored session rejected:', err);
+      sessionStorage.removeItem(USER_SESSION_KEY);
+      return null;
+    }
+  },
+
+  async logout() {
+    const token = State.user?.token || '';
     localStorage.removeItem('lyha_auth');
     localStorage.removeItem(USER_SESSION_KEY);
+    sessionStorage.removeItem(USER_SESSION_KEY);
     State.user = null;
     this.closeUserMenus();
     this.closeAiMenus();
@@ -1243,6 +1251,9 @@ const App = {
     this.renderAdminControls();
     this.renderAiControls();
     this.showPage('login');
+    if (token) {
+      try { await this.postAction({ action: 'logout', token }); } catch (err) {}
+    }
   },
 
   showLoading(show) {
