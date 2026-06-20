@@ -1,0 +1,26 @@
+{
+  "name": "LYHA Electronic Archive",
+  "short_name": "LYHA Archive",
+  "description": "Installable offline archive dashboard for the Libyan Youth Hostels Association.",
+  "start_url": "./index-claudev5-admin-pwa.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#0f2d52",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "./logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
